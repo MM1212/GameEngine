@@ -1,0 +1,10 @@
+bin/*
+objs
+*.make
+Makefile
+*.a
+*.d
+.vs
+*.sln
+*.suo
+*.vcxproj*
