@@ -26,7 +26,7 @@ Vendors.glfw = MPDepTrack.new('glfw')
   :addLink("GLFW");
 
 Vendors.glm = MPDepTrack.new('glm')
-  :addInclude("glm");
+  :addInclude("");
 
 Vendors.Vulkan = MPDepTrack.new('vulkan', VULKAN_SDK)
   :addInclude('win32', "Include")

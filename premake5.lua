@@ -12,6 +12,20 @@ workspace "GameEngine"
   startproject "Editor"
   configurations { "Debug", "Release" }
   flags { "MultiProcessorCompile" }
+  defines { "_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING" }
+  filter "configurations:Debug"
+    defines {
+      "ENABLE_ENGINE_LOGGING",
+      "ENABLE_APP_LOGGING"
+    }
+  filter "configurations:Release"
+    defines {
+      "ENABLE_APP_LOGGING"
+    }
+  filter "system:linux"
+    buildoptions { "-gdwarf-2" }
+    defines {'_GLIBCXX_DEBUG'}
+  filter {}
 
 group "Vendor"
   vendor "glfw"

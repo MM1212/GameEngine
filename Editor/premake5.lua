@@ -28,11 +28,18 @@ project "Editor"
 	filter "system:windows"
 		systemversion "latest"
     defines { '_WIN32' }
-  
+
   filter "system:linux"
     pic "On"
     systemversion "latest"
     defines { '_LINUX' }
+    -- since gmake2 doesn't link agaisnt Engine dependencies, we have to do that ourselves
+    links {
+      "GLFW",
+      "ImGui",
+      "yaml-cpp",
+      "spdlog"
+    }
 
 	filter "configurations:Debug"
 		defines "DEBUG"

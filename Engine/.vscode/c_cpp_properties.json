@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "name": "Win32",
+      "includePath": [
+        "%{workspaceFolder}/Engine/**",
+        "%{workspaceFolder}/Engine/includes",
+        "${workspaceFolder}/vendor/spdlog/include",
+        "${workspaceFolder}/vendor/glm",
+        "${workspaceFolder}/vendor/glfw/include",
+        "${workspaceFolder}/vendor/imgui",
+        "${workspaceFolder}/vendor/ImGuizmo",
+        "${workspaceFolder}/vendor/entt/include",
+        "${workspaceFolder}/vendor/yaml-cpp/include"
+      ],
+      "defines": ["_DEBUG", "_WIN32", "_UNICODE"],
+      "windowsSdkVersion": "10.0.22621.0",
+      "compilerPath": "cl.exe",
+      "cppStandard": "c++20",
+      "intelliSenseMode": "windows-msvc-x64"
+    }
+  ],
+  "version": 4
+}

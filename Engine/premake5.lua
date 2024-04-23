@@ -66,12 +66,12 @@ project "Engine"
     }
 
   filter "configurations:Debug"
-    defines "DEBUG"
+    defines "_DEBUG"
     runtime "Debug"
     symbols "on"
 
 
   filter "configurations:Release"
-    defines "RELEASE"
+    defines "_RELEASE"
     runtime "Release"
     optimize "on"
