@@ -54,7 +54,6 @@ namespace Engine {
     void onRender(DeltaTime dt);
   private:
     static Application* s_instance;
-    EventSystem::EventListenerHandle windowCloseHandle;
   };
 
   Application* CreateApplication(ApplicationCmdArgs args);

@@ -7,17 +7,8 @@
 #include <unordered_map>
 #include <any>
 #include <functional>
+#include <memory>
 #include <engine/utils/logger.h>
-
-namespace std {
-  template <>
-  constexpr bool greater<Engine::EventSystem::EventListener>::operator()(
-    const Engine::EventSystem::EventListener& a,
-    const Engine::EventSystem::EventListener& b
-    ) const {
-    return a.priority < b.priority;
-  }
-}
 
 namespace Engine {
   class EventSystem {
@@ -26,27 +17,38 @@ namespace Engine {
       EventTag tag;
       uint32_t handle;
 
-      EventListenerHandle() = default;
+      EventListenerHandle() = delete;
       EventListenerHandle(EventTag tag, uint32_t handle) : tag(tag), handle(handle) {}
       EventListenerHandle(const EventListenerHandle&) = default;
       EventListenerHandle(EventListenerHandle&&) = default;
       EventListenerHandle& operator=(const EventListenerHandle&) = default;
     };
   private:
+    using EventListenerCallback = std::function<bool(Event&)>;
     struct EventListener {
-      std::function<bool(Event&)> listener;
+      EventListenerCallback listener;
       uint8_t priority = 0;
       uint32_t handle = 0;
+
+      bool operator>(const EventListener& other) const {
+        return this->priority > other.priority;
+      }
+      bool operator<(const EventListener& other) const {
+        return this->priority < other.priority;
+      }
+
+      EventListener() = default;
+      EventListener(EventListenerCallback listener, uint8_t priority, uint32_t handle)
+        : listener(listener), priority(priority), handle(handle) {}
     };
     using Container = std::priority_queue<EventListener, std::vector<EventListener>, std::greater<EventListener>>;
     class EventListenerQueue : public Container {
     public:
-      template <typename T>
-      bool operator()(T& event) {
+      bool operator()(Event& event) {
         bool handled = false;
         for (auto& listener : this->c) {
           try {
-            handled |= dynamic_cast<std::function<bool(T&)>&>(listener.listener)(event);
+            handled |= listener.listener(event);
             if (event.handled) {
               break;
             }
@@ -73,11 +75,25 @@ namespace Engine {
     EventSystem();
     ~EventSystem() = default;
 
-    template <typename T>
-    EventListenerHandle bind(EventTag tag, T&& listener, uint8_t priority = 0) {
+
+    template <typename T, typename F>
+    EventListenerHandle bind(EventTag tag, F cb, uint8_t priority = 0) {
       uint32_t handle = this->listenerId++;
-      this->listeners[static_cast<EventTag::ID>(tag)].push(EventListener{ std::forward<T>(listener), priority, handle });
+      this->listeners[static_cast<EventTag::ID>(tag)].emplace([cb](Event& raw) {
+        T& event = dynamic_cast<T&>(raw);
+        return cb(event);
+      }, priority, handle);
       return { tag, handle };
+    }
+    template <typename T, typename F>
+    EventListenerHandle bind(F cb, uint8_t priority = 0) {
+      auto tag = typename T::Tag{};
+      return this->bind<T, F>(tag, cb, priority);
+    }
+    template <typename T, typename F>
+    EventListenerHandle bind(std::string_view eventName, F cb, uint8_t priority = 0) {
+      EventTag tag{ eventName };
+      return this->bind<T, F>(tag, cb, priority);
     }
 
     bool unbind(const EventListenerHandle& handle) {

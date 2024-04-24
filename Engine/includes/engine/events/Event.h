@@ -2,16 +2,18 @@
 
 #include <string_view>
 #include <iostream>
+#include <engine/utils/hash.h>
 
 namespace Engine {
   struct EventTag {
     using ID = uint64_t;
-    using Tag = const std::string_view;
+    using Tag = std::string_view;
     ID id = 0;
     Tag name = nullptr;
 
-    constexpr EventTag(ID id) : id(id) {}
-    constexpr EventTag(Tag name);
+    EventTag() = delete;
+    EventTag(ID id) : id(id) {}
+    constexpr EventTag(Tag name) : name(name), id(Hash(name)) {}
     EventTag(const EventTag& other) = default;
     EventTag(EventTag&& other) = default;
     EventTag& operator=(const EventTag& other) = default;
@@ -22,7 +24,7 @@ namespace Engine {
   };
   struct Event {
     Event(EventTag tag) : tag(tag) {}
-    virtual ~Event() = 0;
+    virtual ~Event() = default;
 
     explicit operator EventTag() const { return this->tag; }
     explicit operator EventTag::ID() const { return this->tag.id; }

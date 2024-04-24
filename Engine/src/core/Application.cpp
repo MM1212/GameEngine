@@ -4,6 +4,11 @@
 
 #include <filesystem>
 
+#define BIND_EVENT_FN(fn, EventType) ([fn](Event&ev) {\
+  auto& e = dynamic_cast<##EventType&>(ev);\
+  fn(e); \
+})
+
 namespace Engine {
   Application* Application::s_instance = nullptr;
 
@@ -15,9 +20,12 @@ namespace Engine {
     if (!spec.workingDirectory.empty()) {
       std::filesystem::current_path(spec.workingDirectory);
     }
-    this->windowCloseHandle = std::move(this->eventSystem.bind(WindowCloseEvent::Tag{}, [this](const Event& event) {
+    // else
+    //   std::filesystem::current_path(spec.args[0]);
+    this->eventSystem.bind<WindowCloseEvent>(([this](WindowCloseEvent& ev) {
       this->running = false;
-      }));
+      return true;
+    }));
   }
 
   Application::~Application() {
@@ -51,11 +59,6 @@ namespace Engine {
       //   this->onWindowResize();
       //   this->platform.window.resetResizedFlag();
       // }
-      if (this->platform.shouldExit()) {
-        this->running = false;
-        continue;
-      }
-
       this->onUpdate(dt);
       this->onRender(dt);
     }

@@ -26,6 +26,7 @@ namespace Engine {
       Tag() : EventTag{ "engine:window:onClose" } {}
     };
     WindowCloseEvent() : Event(Tag{}) {}
+    ~WindowCloseEvent() = default;
   };
   class Window {
   public:

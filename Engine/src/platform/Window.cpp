@@ -12,12 +12,7 @@ using Engine::Window;
 Window::Window(
   Platform& platform,
   WindowSpecs specs
-) : platform(platform), spec(specs), size(specs.size), title(specs.title) {
-  glfwSetWindowCloseCallback(GLFW_WINDOW(this->handle), [](GLFWwindow* handle) {
-    WindowCloseEvent event;
-    EventSystem::Get()->dispatch(event);
-  });
-}
+) : platform(platform), spec(specs), size(specs.size), title(specs.title) {}
 
 Window::~Window() {
   if (!this->handle)
@@ -52,6 +47,10 @@ void Window::init() {
     throw std::runtime_error("Failed to create window");
   glfwSetWindowUserPointer(GLFW_WINDOW(this->handle), &this->platform);
   glfwSetFramebufferSizeCallback(GLFW_WINDOW(this->handle), reinterpret_cast<GLFWframebuffersizefun>(FramebufferResizeCallback));
+  glfwSetWindowCloseCallback(GLFW_WINDOW(this->handle), [](GLFWwindow* handle) {
+    WindowCloseEvent event;
+    EventSystem::Get()->dispatch(event);
+    });
 }
 
 void Window::FramebufferResizeCallback(void* handle, int width, int height) {
