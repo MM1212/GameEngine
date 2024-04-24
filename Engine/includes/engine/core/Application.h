@@ -4,6 +4,7 @@
 #include <engine/utils/logger.h>
 #include <engine/utils/asserts.h>
 #include <engine/utils/memory.h>
+#include <engine/events/EventSystem.h>
 #include "LayersManager.h"
 #include "DeltaTime.h"
 
@@ -24,7 +25,7 @@ namespace Engine {
   class Application {
   public:
     Application(const ApplicationInfo& info);
-    virtual ~Application() = default;
+    virtual ~Application();
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
     static Application* Get() { return s_instance; }
@@ -43,6 +44,7 @@ namespace Engine {
   protected:
     ApplicationInfo spec;
     Platform platform;
+    EventSystem eventSystem;
     bool running = false;
     bool suspended = false;
   private:
@@ -52,6 +54,7 @@ namespace Engine {
     void onRender(DeltaTime dt);
   private:
     static Application* s_instance;
+    EventSystem::EventListenerHandle windowCloseHandle;
   };
 
   Application* CreateApplication(ApplicationCmdArgs args);

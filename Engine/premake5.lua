@@ -26,6 +26,7 @@ project "Engine"
 
   includedirs {
     "includes",
+    "includes/engine",
     "%{Vendors.spdlog.shared.include}",
     "%{Vendors.glm.shared.include}",
     "%{Vendors.glfw.shared.include}",

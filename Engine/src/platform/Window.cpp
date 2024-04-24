@@ -3,6 +3,7 @@
 #include <engine/platform/Platform.h>
 #include <stdexcept>
 #include <glfw/glfw3.h>
+#include <events/EventSystem.h>
 
 using Engine::Window;
 
@@ -11,7 +12,12 @@ using Engine::Window;
 Window::Window(
   Platform& platform,
   WindowSpecs specs
-) : platform(platform), spec(specs), size(specs.size), title(specs.title) {}
+) : platform(platform), spec(specs), size(specs.size), title(specs.title) {
+  glfwSetWindowCloseCallback(GLFW_WINDOW(this->handle), [](GLFWwindow* handle) {
+    WindowCloseEvent event;
+    EventSystem::Get()->dispatch(event);
+  });
+}
 
 Window::~Window() {
   if (!this->handle)

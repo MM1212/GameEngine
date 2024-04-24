@@ -3,6 +3,7 @@
 #include <memory>
 #include <engine/utils/logger.h>
 #include <engine/utils/asserts.h>
+#include <engine/events/Event.h>
 
 #include <glm/glm.hpp>
 
@@ -19,6 +20,12 @@ namespace Engine {
     std::string_view title;
     bool vSync = false;
     bool resizable = true;
+  };
+  struct WindowCloseEvent : public Event {
+    struct Tag : public EventTag {
+      Tag() : EventTag{ "engine:window:onClose" } {}
+    };
+    WindowCloseEvent() : Event(Tag{}) {}
   };
   class Window {
   public:

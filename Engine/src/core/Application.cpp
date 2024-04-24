@@ -15,6 +15,13 @@ namespace Engine {
     if (!spec.workingDirectory.empty()) {
       std::filesystem::current_path(spec.workingDirectory);
     }
+    this->windowCloseHandle = std::move(this->eventSystem.bind(WindowCloseEvent::Tag{}, [this](const Event& event) {
+      this->running = false;
+      }));
+  }
+
+  Application::~Application() {
+    s_instance = nullptr;
   }
 
   bool Application::init() {
