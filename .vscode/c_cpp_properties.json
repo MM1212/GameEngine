@@ -14,7 +14,11 @@
         "${workspaceFolder}/vendor/entt/include",
         "${workspaceFolder}/vendor/yaml-cpp/include"
       ],
-      "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
+      "defines": [
+        "_DEBUG", "UNICODE", "_UNICODE",
+        "ENABLE_ENGINE_LOGGING",
+        "ENABLE_APP_LOGGING"
+      ],
       "windowsSdkVersion": "10.0.22621.0",
       "compilerPath": "cl.exe",
       "cStandard": "c17",

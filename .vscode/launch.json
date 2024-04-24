@@ -5,13 +5,23 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "(Linux) Launch",
+      "name": "Launch Engine",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/bin/Debug-linux-x86_64/Editor/Editor",
-      "args": [],
-      "cwd": "${workspaceFolder}",
-      "stopAtEntry": false
+      "stopAtEntry": false,
+      "linux": {
+        "cwd": "${workspaceFolder}/bin/Debug-linux-x86_64",
+        "program": "${workspaceFolder}/bin/Debug-linux-x86_64/Editor/Editor",
+        "externalConsole": false
+      },
+      "windows": {
+        "cwd": "${workspaceFolder}/bin/Debug-windows-x86_64",
+        "program": "${workspaceFolder}/bin/Debug-windows-x86_64/Editor/Editor.exe",
+        "type": "cppvsdbg",
+        "console": "integratedTerminal"
+      },
+      "preLaunchTask": "Build Editor (Debug)",
+      "args": []
     }
   ]
 }
