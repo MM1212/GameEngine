@@ -1,5 +1,5 @@
-#include "engine/platform/input/Input.h"
-#include <engine/platform/input/InputManager.h>
+#include "engine/input/Input.h"
+#include <engine/input/InputManager.h>
 #include <engine/core/Application.h>
 
 #include <unordered_map>

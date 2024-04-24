@@ -46,17 +46,15 @@ void Window::init() {
   if (!this->handle)
     throw std::runtime_error("Failed to create window");
   glfwSetWindowUserPointer(GLFW_WINDOW(this->handle), &this->platform);
-  glfwSetFramebufferSizeCallback(GLFW_WINDOW(this->handle), reinterpret_cast<GLFWframebuffersizefun>(FramebufferResizeCallback));
+  glfwSetFramebufferSizeCallback(GLFW_WINDOW(this->handle), [](GLFWwindow* handle, int width, int height) {
+    auto platform = reinterpret_cast<Platform*>(glfwGetWindowUserPointer(GLFW_WINDOW(handle)));
+    if (!platform)
+      return;
+    platform->window->resized = true;
+    platform->window->size = { width, height };
+    EventSystem::Get()->queue<WindowResizeEvent>(platform->window->size);
+  });
   glfwSetWindowCloseCallback(GLFW_WINDOW(this->handle), [](GLFWwindow* handle) {
-    WindowCloseEvent event;
-    EventSystem::Get()->dispatch(event);
-    });
-}
-
-void Window::FramebufferResizeCallback(void* handle, int width, int height) {
-  auto platform = reinterpret_cast<Platform*>(glfwGetWindowUserPointer(GLFW_WINDOW(handle)));
-  if (!platform)
-    return;
-  platform->window->resized = true;
-  platform->window->size = { width, height };
+    EventSystem::Get()->queue<WindowCloseEvent>();
+  });
 }

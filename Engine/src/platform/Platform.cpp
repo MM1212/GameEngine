@@ -1,6 +1,6 @@
 #include "engine/platform/Platform.h"
 #include <engine/utils/logger.h>
-#include <engine/platform/input/InputManager.h>
+#include <engine/input/InputManager.h>
 
 using Engine::Platform;
 

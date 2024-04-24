@@ -1,6 +1,6 @@
 #include "engine/core/Application.h"
 #include <engine/utils/logger.h>
-#include <engine/platform/input/InputManager.h>
+#include <engine/input/InputManager.h>
 
 #include <filesystem>
 
@@ -22,7 +22,7 @@ namespace Engine {
     }
     // else
     //   std::filesystem::current_path(spec.args[0]);
-    this->eventSystem.bind<WindowCloseEvent>(([this](WindowCloseEvent& ev) {
+    this->eventSystem.on<WindowCloseEvent>(([this](WindowCloseEvent& ev) {
       this->running = false;
       return true;
     }));
@@ -50,17 +50,15 @@ namespace Engine {
   void Application::run() {
     this->running = true;
     auto lastTime = std::chrono::high_resolution_clock::now();
+
     while (this->running) {
       this->platform.update();
       auto now = std::chrono::high_resolution_clock::now();
       DeltaTime dt = std::chrono::duration<float, std::chrono::seconds::period>(now - lastTime).count();
       lastTime = now;
-      // if (this->platform.window.wasResized()) {
-      //   this->onWindowResize();
-      //   this->platform.window.resetResizedFlag();
-      // }
       this->onUpdate(dt);
       this->onRender(dt);
+      this->eventSystem.dispatchQueue();
     }
   }
 }

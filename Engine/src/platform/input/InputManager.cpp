@@ -1,5 +1,5 @@
 #include <engine/platform/Platform.h>
-#include "engine/platform/input/InputManager.h"
+#include "engine/input/InputManager.h"
 #include <GLFW/glfw3.h>
 
 using namespace Engine::Input;

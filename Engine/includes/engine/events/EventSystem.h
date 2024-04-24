@@ -73,11 +73,10 @@ namespace Engine {
   public:
     static EventSystem* Get() { return instance; }
     EventSystem();
-    ~EventSystem() = default;
-
+    ~EventSystem();
 
     template <typename T, typename F>
-    EventListenerHandle bind(EventTag tag, F cb, uint8_t priority = 0) {
+    EventListenerHandle on(EventTag tag, F cb, uint8_t priority = 0) {
       uint32_t handle = this->listenerId++;
       this->listeners[static_cast<EventTag::ID>(tag)].emplace([cb](Event& raw) {
         T& event = dynamic_cast<T&>(raw);
@@ -86,32 +85,40 @@ namespace Engine {
       return { tag, handle };
     }
     template <typename T, typename F>
-    EventListenerHandle bind(F cb, uint8_t priority = 0) {
+    EventListenerHandle on(F cb, uint8_t priority = 0) {
       auto tag = typename T::Tag{};
-      return this->bind<T, F>(tag, cb, priority);
+      return this->on<T, F>(tag, cb, priority);
     }
     template <typename T, typename F>
-    EventListenerHandle bind(std::string_view eventName, F cb, uint8_t priority = 0) {
+    EventListenerHandle on(std::string_view eventName, F cb, uint8_t priority = 0) {
       EventTag tag{ eventName };
-      return this->bind<T, F>(tag, cb, priority);
+      return this->on<T, F>(tag, cb, priority);
     }
 
-    bool unbind(const EventListenerHandle& handle) {
+    bool off(const EventListenerHandle& handle) {
       if (this->listeners.count(static_cast<EventTag::ID>(handle.tag))) {
         return this->listeners[static_cast<EventTag::ID>(handle.tag)].pop(handle);
       }
     }
 
     template <typename T>
-    bool dispatch(T& event) {
+    bool emit(T& event) {
       if (this->listeners.count(static_cast<EventTag::ID>(event))) {
         return this->listeners[static_cast<EventTag::ID>(event)](event);
       }
       return false;
     }
 
+    template <typename T, typename... Args>
+    bool queue(Args&&... args) {
+      this->eventQueue.push(std::make_unique<T>(std::forward<Args>(args)...));
+      return true;
+    }
+
+    uint32_t dispatchQueue();
   private:
     std::unordered_map<EventTag::ID, EventListenerQueue> listeners;
+    std::queue<std::unique_ptr<Event>> eventQueue;
     uint32_t listenerId = 0;
     static EventSystem* instance;
   };

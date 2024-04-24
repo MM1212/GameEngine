@@ -28,6 +28,16 @@ namespace Engine {
     WindowCloseEvent() : Event(Tag{}) {}
     ~WindowCloseEvent() = default;
   };
+  struct WindowResizeEvent : public Event {
+    struct Tag : public EventTag {
+      Tag() : EventTag{ "engine:window:onResize" } {}
+    };
+    WindowResizeEvent(uint32_t width, uint32_t height) : Event(Tag{}), width(width), height(height) {}
+    WindowResizeEvent(glm::uvec2 size) : Event(Tag{}), width(size.x), height(size.y) {}
+    ~WindowResizeEvent() = default;
+    uint32_t width;
+    uint32_t height;
+  };
   class Window {
   public:
     Window(Platform& platform, WindowSpecs specs);
@@ -49,8 +59,6 @@ namespace Engine {
     void init();
     // TODO: window surface
   private:
-    static void FramebufferResizeCallback(void* window, int width, int height);
-
     Platform& platform;
     WindowSpecs spec;
     glm::uvec2 size;
