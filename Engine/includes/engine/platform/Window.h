@@ -32,6 +32,7 @@ namespace Engine {
     struct Tag : public EventTag {
       Tag() : EventTag{ "engine:window:onResize" } {}
     };
+    WindowResizeEvent() : Event(Tag{}), width(0), height(0) {}
     WindowResizeEvent(uint32_t width, uint32_t height) : Event(Tag{}), width(width), height(height) {}
     WindowResizeEvent(glm::uvec2 size) : Event(Tag{}), width(size.x), height(size.y) {}
     ~WindowResizeEvent() = default;

@@ -5,6 +5,7 @@
 #include <engine/utils/asserts.h>
 #include <engine/utils/memory.h>
 #include <engine/events/EventSystem.h>
+#include <engine/renderer/RendererAPI.h>
 #include "LayersManager.h"
 #include "DeltaTime.h"
 
@@ -17,10 +18,16 @@ namespace Engine {
       return args[index];
     }
   };
+  struct ApplicationVersion {
+    uint32_t major = 1;
+    uint32_t minor = 0;
+    uint32_t patch = 0;
+  };
   struct ApplicationInfo {
     WindowSpecs windowInfo;
     std::string_view workingDirectory;
     ApplicationCmdArgs args;
+    ApplicationVersion version{};
   };
   class Application {
   public:
@@ -45,6 +52,7 @@ namespace Engine {
     ApplicationInfo spec;
     Platform platform;
     EventSystem eventSystem;
+    std::unique_ptr<Renderer> renderer;
     bool running = false;
     bool suspended = false;
   private:

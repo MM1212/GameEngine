@@ -12,7 +12,8 @@
         "${workspaceFolder}/vendor/imgui",
         "${workspaceFolder}/vendor/ImGuizmo",
         "${workspaceFolder}/vendor/entt/include",
-        "${workspaceFolder}/vendor/yaml-cpp/include"
+        "${workspaceFolder}/vendor/yaml-cpp/include",
+        "${VULKAN_SDK}/Include"
       ],
       "defines": [
         "_DEBUG", "UNICODE", "_UNICODE",

@@ -37,6 +37,12 @@ namespace Engine {
       LOG_CRITICAL("Failed to initialize platform!");
       return false;
     }
+    // TODO: Allow the user to choose the renderer API
+    this->renderer = Renderer::Create(this->spec, this->platform);
+    if (!this->renderer) {
+      LOG_CRITICAL("Failed to create renderer!");
+      return false;
+    }
     return true;
   }
 
