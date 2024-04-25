@@ -18,7 +18,7 @@ namespace Engine {
     std::stringstream pattern;
     pattern
       << "[" << COLOR_RED << "%T" << COLOR_RESET << "] "
-      << "[" << COLOR_CYAN << "%-6n" << COLOR_RESET << "] "
+      << "[" << COLOR_CYAN << "%-15!n" << COLOR_RESET << "] "
       << "[%^%l%$] %v";
     consoleSink->set_pattern(pattern.str());
     auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("engine.log", true);

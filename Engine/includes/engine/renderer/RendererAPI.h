@@ -42,8 +42,11 @@ namespace Engine {
     virtual bool endFrame() = 0;
     // Can be manually called to resize the frame buffer but will also be called by event system when window is resized
     virtual void onResize(uint32_t width, uint32_t height) = 0;
+
+    static std::shared_ptr<spdlog::logger>& GetLogger() { return Logger; }
     static std::unique_ptr<RendererAPI> Create(ApplicationInfo& appInfo, Platform& platform, API api = DEFAULT_API);
   protected:
+    static std::shared_ptr<spdlog::logger> Logger;
     ApplicationInfo& appInfo;
     Platform& platform;
     API api;

@@ -55,6 +55,7 @@ namespace Engine {
     bool shouldClose() const;
     void close();
     void pollEvents();
+    void waitEvents();
     void resetResizedFlag() { this->resized = false; }
     void init();
     // Vulkan specific API Calls (defined in platform/apis/Vulkan/Window.cpp)

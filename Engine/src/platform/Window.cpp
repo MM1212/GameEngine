@@ -33,6 +33,10 @@ void Window::pollEvents() {
   glfwPollEvents();
 }
 
+void Window::waitEvents() {
+  glfwWaitEvents();
+}
+
 void Window::init() {
   if (!glfwInit())
     throw std::runtime_error("Failed to initialize GLFW");

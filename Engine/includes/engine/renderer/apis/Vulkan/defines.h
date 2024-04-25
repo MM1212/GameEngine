@@ -4,13 +4,7 @@
 #include <utils/logger.h>
 
 #ifdef _DEBUG
-#define VK_CHECK(x) { \
-  VkResult result = x; \
-  if (result != VK_SUCCESS) { \
-    LOG_ERROR("Vulkan API Call {} failed with error code {}", #x, result); \
-    _DEBUGBREAK(); \
-  } \
-}
+#define VK_CHECK(x) ASSERT_MSG(x == VK_SUCCESS, "Vulkan API Call failed with error code {}", x)
 #else
 #define VK_CHECK(x) x
 #endif
