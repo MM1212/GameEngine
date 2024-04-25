@@ -39,6 +39,7 @@ void Window::init() {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, this->spec.resizable);
   glfwSwapInterval(static_cast<int>(this->spec.vSync));
+
   this->handle = glfwCreateWindow(
     this->size.x, this->size.y,
     this->title.data(), nullptr, nullptr

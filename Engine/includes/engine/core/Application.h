@@ -36,7 +36,7 @@ namespace Engine {
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
     static Application* Get() { return s_instance; }
-    bool init();
+    virtual bool init();
     void run();
 
     void pushLayer(Ref<AppLayer> layer) { this->layersManager.pushLayer(layer); }
@@ -52,7 +52,7 @@ namespace Engine {
     ApplicationInfo spec;
     Platform platform;
     EventSystem eventSystem;
-    std::unique_ptr<Renderer> renderer;
+    std::unique_ptr<RendererAPI> renderer;
     bool running = false;
     bool suspended = false;
   private:

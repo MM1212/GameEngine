@@ -38,7 +38,7 @@ namespace Engine {
       return false;
     }
     // TODO: Allow the user to choose the renderer API
-    this->renderer = Renderer::Create(this->spec, this->platform);
+    this->renderer = RendererAPI::Create(this->spec, this->platform);
     if (!this->renderer) {
       LOG_CRITICAL("Failed to create renderer!");
       return false;

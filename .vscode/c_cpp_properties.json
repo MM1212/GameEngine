@@ -3,9 +3,9 @@
     {
       "name": "Win32",
       "includePath": [
-        "${workspaceFolder}/**",
-        "${workspaceFolder}/Engine/**",
+        "${workspaceFolder}/Editor/includes",
         "${workspaceFolder}/Engine/includes",
+        "${workspaceFolder}/Engine/includes/engine",
         "${workspaceFolder}/vendor/spdlog/include",
         "${workspaceFolder}/vendor/glm",
         "${workspaceFolder}/vendor/glfw/include",

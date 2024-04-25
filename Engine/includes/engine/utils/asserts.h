@@ -19,6 +19,6 @@
   #define ASSERT(x, ...) { if(!(x)) { LOG_CRITICAL("Assertion Failed: {0}", __VA_ARGS__); _DEBUGBREAK(); } }
   #define APP_ASSERT(x, ...) { if(!(x)) { LOG_CRITICAL("Assertion Failed: {0}", __VA_ARGS__); _DEBUGBREAK(); } }
 #else
-  #define ASSERT(x, ...)
-  #define APP_ASSERT(x, ...)
+  #define ASSERT(x, ...) x
+  #define APP_ASSERT(x, ...) x
 #endif

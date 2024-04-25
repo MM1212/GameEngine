@@ -1,12 +1,12 @@
 #include "renderer/RendererAPI.h"
 #include <core/Application.h>
-#include <renderer/apis/VulkanRenderer.h>
+#include <renderer/apis/Vulkan/VulkanRenderer.h>
 #include <events/EventSystem.h>
 #include <platform/Window.h>
 
-using Engine::Renderer;
+using Engine::RendererAPI;
 
-Renderer::Renderer(ApplicationInfo& appInfo, Platform& platform, API api)
+RendererAPI::RendererAPI(ApplicationInfo& appInfo, Platform& platform, API api)
   : appInfo(appInfo), platform(platform), api(api) {
   EventSystem::Get()->on<WindowResizeEvent>([this](WindowResizeEvent& event) -> bool {
     this->onResize(event.width, event.height);
@@ -14,11 +14,11 @@ Renderer::Renderer(ApplicationInfo& appInfo, Platform& platform, API api)
   }, 100);
 }
 
-std::unique_ptr<Renderer> Renderer::Create(ApplicationInfo& appInfo, Platform& platform, API api) {
+std::unique_ptr<RendererAPI> RendererAPI::Create(ApplicationInfo& appInfo, Platform& platform, API api) {
   try {
     switch (api) {
     case API::Vulkan:
-      return std::make_unique<VulkanRenderer>(appInfo, platform);
+      return std::make_unique<Renderers::Vulkan::Renderer>(appInfo, platform);
     case API::OpenGL:
       LOG_CRITICAL("OpenGL is not supported yet!");
       // return std::make_unique<OpenGLRenderer>(appInfo, platform);
@@ -30,7 +30,7 @@ std::unique_ptr<Renderer> Renderer::Create(ApplicationInfo& appInfo, Platform& p
     }
   }
   catch (const std::exception& e) {
-    LOG_CRITICAL("Failed to create {} renderer: {}", Renderer::GetApiName(api), e.what());
+    LOG_CRITICAL("Failed to create {} renderer: {}", RendererAPI::GetApiName(api), e.what());
     return nullptr;
   }
 }

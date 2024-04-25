@@ -1,0 +1,34 @@
+#include "renderer/apis/Vulkan/defines.h"
+
+namespace Engine::Renderers::Vulkan {
+  VkResult CreateDebugUtilsMessengerEXT(
+    VkInstance instance,
+    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+    const VkAllocationCallbacks* pAllocator,
+    VkDebugUtilsMessengerEXT* pDebugMessenger
+  ) {
+    static auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+      instance,
+      "vkCreateDebugUtilsMessengerEXT"
+    );
+    if (func != nullptr) {
+      return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    }
+    else {
+      return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+  }
+
+  void DestroyDebugUtilsMessengerEXT(
+    VkInstance instance,
+    VkDebugUtilsMessengerEXT debugMessenger,
+    const VkAllocationCallbacks* pAllocator
+  ) {
+    static auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
+      instance,
+      "vkDestroyDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+      func(instance, debugMessenger, pAllocator);
+    }
+  }
+}

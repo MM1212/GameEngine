@@ -56,9 +56,10 @@ namespace Engine {
     void close();
     void pollEvents();
     void resetResizedFlag() { this->resized = false; }
-
     void init();
-    // TODO: window surface
+    // Vulkan specific API Calls (defined in platform/apis/Vulkan/Window.cpp)
+    int createVulkanSurface(void* device);
+    std::vector<std::string_view> getVulkanRequiredExtensions();
   private:
     Platform& platform;
     WindowSpecs spec;

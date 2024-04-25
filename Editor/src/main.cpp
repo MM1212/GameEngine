@@ -6,8 +6,14 @@ namespace Editor {
   public:
     App(
       const Engine::ApplicationInfo& info
-    ) : Engine::Application(info) {
-      this->pushLayer<MainLayer>();
+    ) : Engine::Application(info) {}
+
+    bool init() override {
+      if (!this->Engine::Application::init()) {
+        return false;
+      }
+      this->pushLayer(std::make_shared<MainLayer>());
+      return true;
     }
   };
 }
