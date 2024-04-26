@@ -17,18 +17,18 @@ Swapchain::~Swapchain() {
   LOG_RENDERER_INFO("Swapchain destroyed");
 
   // clean up sync resources
-  for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-    vkDestroySemaphore(this->device.getHandle(), this->imageAvailableSemaphores[i], this->device.getAllocator());
-    vkDestroySemaphore(this->device.getHandle(), this->renderFinishedSemaphores[i], this->device.getAllocator());
-    vkDestroyFence(this->device.getHandle(), this->inFlightFences[i], this->device.getAllocator());
-  }
+  // for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+  //   vkDestroySemaphore(this->device.getHandle(), this->imageAvailableSemaphores[i], this->device.getAllocator());
+  //   vkDestroySemaphore(this->device.getHandle(), this->renderFinishedSemaphores[i], this->device.getAllocator());
+  //   vkDestroyFence(this->device.getHandle(), this->inFlightFences[i], this->device.getAllocator());
+  // }
 }
 
 void Swapchain::init() {
   this->createSwapChain();
   this->createImageViews();
   this->createDepthResources();
-  this->createSyncObjects();
+  // this->createSyncObjects();
   LOG_RENDERER_INFO("Swapchain initialized");
 }
 
@@ -78,20 +78,25 @@ void Swapchain::createSwapChain() {
 }
 
 // we'll do sanity checks on the VkResult when we call this function
-VkResult Swapchain::acquireNextImage(uint32_t* imageIndex, uint64_t timeout) {
+VkResult Swapchain::acquireNextImage(
+  uint32_t* imageIndex,
+  VkSemaphore imageAvailableSemaphore,
+  VkFence fence,
+  uint64_t timeout
+) {
   return vkAcquireNextImageKHR(
     this->device.getHandle(),
     this->handle, timeout,
-    this->imageAvailableSemaphores[this->currentFrame],
-    this->inFlightFences[this->currentFrame], imageIndex
+    imageAvailableSemaphore, fence,
+    imageIndex
   );
 }
 
 // we'll do sanity checks on the VkResult when we call this function
-VkResult Swapchain::presentImage(uint32_t imageIndex) {
+VkResult Swapchain::presentImage(uint32_t imageIndex, VkSemaphore renderFinishedSemaphore) {
   VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
   presentInfo.waitSemaphoreCount = 1;
-  presentInfo.pWaitSemaphores = &this->renderFinishedSemaphores[this->currentFrame];
+  presentInfo.pWaitSemaphores = &renderFinishedSemaphore;
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = &this->handle;
   presentInfo.pImageIndices = &imageIndex;
@@ -195,7 +200,7 @@ void Swapchain::createDepthResources() {
   }
 }
 
-void Swapchain::createSyncObjects() {
+/* void Swapchain::createSyncObjects() {
   this->imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
   this->renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
   this->inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -228,4 +233,4 @@ void Swapchain::createSyncObjects() {
       &this->inFlightFences[i]
     ));
   }
-}
+} */

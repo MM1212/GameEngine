@@ -39,14 +39,19 @@ namespace Engine::Renderers::Vulkan {
         this->imageFormat.colorSpace == other.imageFormat.colorSpace;
     }
 
-    VkResult acquireNextImage(uint32_t* imageIndex, uint64_t timeout = std::numeric_limits<uint64_t>::max());
-    VkResult presentImage(uint32_t imageIndex);
+    VkResult acquireNextImage(
+      uint32_t* imageIndex,
+      VkSemaphore imageAvailableSemaphore,
+      VkFence fence = VK_NULL_HANDLE,
+      uint64_t timeout = std::numeric_limits<uint64_t>::max()
+    );
+    VkResult presentImage(uint32_t imageIndex, VkSemaphore renderFinishedSemaphore);
   private:
     void init();
     void createSwapChain();
     void createImageViews();
     void createDepthResources();
-    void createSyncObjects();
+    // void createSyncObjects();
 
     // Helper functions
     VkSurfaceFormatKHR chooseSurfaceFormat(
@@ -70,10 +75,10 @@ namespace Engine::Renderers::Vulkan {
     std::vector<VkImageView> imageViews;
     std::vector<Image> depthImages;
 
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
-    std::vector<VkFence> imagesInFlight;
+    // std::vector<VkSemaphore> imageAvailableSemaphores;
+    // std::vector<VkSemaphore> renderFinishedSemaphores;
+    // std::vector<VkFence> inFlightFences;
+    // std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
   };
 }
