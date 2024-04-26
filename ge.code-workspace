@@ -16,7 +16,9 @@
       "**/Thumbs.db": true,
       "**/*.o": true,
       "**/*.d": true,
-      // "vendor/**/*": true
+      "**/*.vcxproj*": true,
+      "**/*.sln": true,
+      "vendor/**/*": true
     },
     "files.associations": {
       ".env.production": "dotenv",
@@ -113,7 +115,8 @@
       "xloctime": "cpp",
       "xtr1common": "cpp",
       "xtree": "cpp",
-      "xutility": "cpp"
+      "xutility": "cpp",
+      "expected": "cpp"
     }
   }
 }

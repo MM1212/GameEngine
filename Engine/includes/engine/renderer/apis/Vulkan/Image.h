@@ -9,7 +9,6 @@ namespace Engine::Renderers::Vulkan {
       VkImageAspectFlags aspectMask;
       VkImageSubresourceRange subresourceRange = {0, 0, 1, 0, 1};
     };
-    VkImageViewType type = VK_IMAGE_VIEW_TYPE_2D;
     VkFormat format = VK_FORMAT_UNDEFINED;
   };
   struct ImageCreateInfo {
@@ -24,7 +23,7 @@ namespace Engine::Renderers::Vulkan {
     bool createView = false;
     union {
       VkImageAspectFlags viewAspectFlags;
-      ImageViewCreateInfo viewCreateInfo;
+      ImageViewCreateInfo viewCreateInfo{};
     };
     VkSampleCountFlagBits samples = VK_SAMPLE_COUNT_1_BIT;
     VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE;

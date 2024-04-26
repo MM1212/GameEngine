@@ -1,33 +1,42 @@
 #include "renderer/apis/Vulkan/Swapchain.h"
+#include "renderer/apis/Vulkan/RenderPass.h"
 #include <renderer/logger.h>
 
 using namespace Engine::Renderers::Vulkan;
 
-Swapchain::Swapchain(Device& device, SwapchainCreateInfo createInfo)
-  : device(device), windowExtent(createInfo.windowExtent), vSync(createInfo.vSync), oldSwapchain(createInfo.oldSwapchain) {
-  this->init();
+Swapchain::Swapchain(
+  Device& device,
+  const SwapchainCreateInfo& createInfo
+)
+  : device(device),
+  windowExtent(createInfo.windowExtent),
+  vSync(createInfo.vSync),
+  oldSwapchain(createInfo.oldSwapchain) {
+  this->init(createInfo);
 }
 
 
 Swapchain::~Swapchain() {
   this->device.waitIdle();
   for (auto imageView : this->imageViews)
-    vkDestroyImageView(this->device.getHandle(), imageView, this->device.getAllocator());
-  vkDestroySwapchainKHR(this->device.getHandle(), this->handle, this->device.getAllocator());
+    vkDestroyImageView(this->device, imageView, this->device.getAllocator());
+  vkDestroySwapchainKHR(this->device, this->handle, this->device.getAllocator());
   LOG_RENDERER_INFO("Swapchain destroyed");
 
   // clean up sync resources
   // for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-  //   vkDestroySemaphore(this->device.getHandle(), this->imageAvailableSemaphores[i], this->device.getAllocator());
-  //   vkDestroySemaphore(this->device.getHandle(), this->renderFinishedSemaphores[i], this->device.getAllocator());
-  //   vkDestroyFence(this->device.getHandle(), this->inFlightFences[i], this->device.getAllocator());
+  //   vkDestroySemaphore(this->device, this->imageAvailableSemaphores[i], this->device.getAllocator());
+  //   vkDestroySemaphore(this->device, this->renderFinishedSemaphores[i], this->device.getAllocator());
+  //   vkDestroyFence(this->device, this->inFlightFences[i], this->device.getAllocator());
   // }
 }
 
-void Swapchain::init() {
+void Swapchain::init(const SwapchainCreateInfo& createInfo) {
   this->createSwapChain();
   this->createImageViews();
   this->createDepthResources();
+  this->createMainRenderPass(createInfo.mainRenderPassCreateInfo);
+  this->createFramebuffers();
   // this->createSyncObjects();
   LOG_RENDERER_INFO("Swapchain initialized");
 }
@@ -66,15 +75,74 @@ void Swapchain::createSwapChain() {
   createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
   createInfo.presentMode = presentMode;
   createInfo.clipped = VK_TRUE;
-  createInfo.oldSwapchain = this->oldSwapchain ? this->oldSwapchain->getHandle() : VK_NULL_HANDLE;
+  createInfo.oldSwapchain = this->oldSwapchain ? static_cast<VkSwapchainKHR>(*this->oldSwapchain) : VK_NULL_HANDLE;
 
-  VK_CHECK(vkCreateSwapchainKHR(this->device.getHandle(), &createInfo, this->device.getAllocator(), &this->handle));
+  VK_CHECK(vkCreateSwapchainKHR(this->device, &createInfo, this->device.getAllocator(), &this->handle));
   this->imageFormat = surfaceFormat;
   this->swapChainExtent = extent;
 
-  vkGetSwapchainImagesKHR(this->device.getHandle(), this->handle, &imageCount, nullptr);
+  vkGetSwapchainImagesKHR(this->device, this->handle, &imageCount, nullptr);
   this->images.resize(imageCount);
-  vkGetSwapchainImagesKHR(this->device.getHandle(), this->handle, &imageCount, this->images.data());
+  vkGetSwapchainImagesKHR(this->device, this->handle, &imageCount, this->images.data());
+}
+
+void Swapchain::createImageViews() {
+  this->imageViews.resize(this->images.size());
+  for (size_t i = 0; i < this->images.size(); i++) {
+    VkImageViewCreateInfo viewInfo{};
+    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+    viewInfo.image = this->images[i];
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    viewInfo.format = this->imageFormat.format;
+    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    viewInfo.subresourceRange.baseMipLevel = 0;
+    viewInfo.subresourceRange.levelCount = 1;
+    viewInfo.subresourceRange.baseArrayLayer = 0;
+    viewInfo.subresourceRange.layerCount = 1;
+
+    VK_CHECK(vkCreateImageView(this->device, &viewInfo, this->device.getAllocator(), &this->imageViews[i]));
+  }
+}
+
+void Swapchain::createDepthResources() {
+  this->depthFormat = this->findDepthFormat();
+  this->depthImages.reserve(this->images.size());
+
+  for (uint32_t i = 0; i < this->images.size(); i++) {
+    ImageCreateInfo createInfo{};
+    createInfo.type = VK_IMAGE_TYPE_2D;
+    createInfo.extent.width = this->swapChainExtent.width;
+    createInfo.extent.height = this->swapChainExtent.height;
+    createInfo.format = this->depthFormat;
+    createInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    createInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+    createInfo.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+    createInfo.createView = true;
+    createInfo.viewAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
+    createInfo.viewCreateInfo.subresourceRange.baseMipLevel = 0;
+    createInfo.viewCreateInfo.subresourceRange.levelCount = 1;
+    createInfo.viewCreateInfo.subresourceRange.baseArrayLayer = 0;
+    createInfo.viewCreateInfo.subresourceRange.layerCount = 1;
+    this->depthImages.emplace_back(this->device, createInfo);
+  }
+}
+
+void Swapchain::createMainRenderPass(const RenderPassCreateInfo& baseCreateInfo) {
+  RenderPassCreateInfo createInfo = baseCreateInfo;
+  createInfo.renderArea.size = { this->swapChainExtent.width, this->swapChainExtent.height };
+
+  this->mainRenderPass = MakeScope<RenderPass>(this->device, *this, createInfo);
+}
+
+void Swapchain::createFramebuffers() {
+  this->framebuffers.reserve(this->getImageCount());
+  for (uint32_t i = 0; i < this->getImageCount(); i++) {
+    FramebufferCreateInfo createInfo;
+    createInfo.renderPass = *this->mainRenderPass;
+    createInfo.size = { this->swapChainExtent.width, this->swapChainExtent.height };
+    createInfo.attachments = { this->getImageView(i), this->getDepthImageView(i) };
+    this->framebuffers.emplace_back(this->device, createInfo);
+  }
 }
 
 // we'll do sanity checks on the VkResult when we call this function
@@ -85,7 +153,7 @@ VkResult Swapchain::acquireNextImage(
   uint64_t timeout
 ) {
   return vkAcquireNextImageKHR(
-    this->device.getHandle(),
+    this->device,
     this->handle, timeout,
     imageAvailableSemaphore, fence,
     imageIndex
@@ -156,23 +224,6 @@ VkExtent2D Swapchain::chooseExtent(const VkSurfaceCapabilitiesKHR& capabilities)
   return actualExtent;
 }
 
-void Swapchain::createImageViews() {
-  this->imageViews.resize(this->images.size());
-  for (size_t i = 0; i < this->images.size(); i++) {
-    VkImageViewCreateInfo viewInfo{};
-    viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-    viewInfo.image = this->images[i];
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    viewInfo.format = this->imageFormat.format;
-    viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-    viewInfo.subresourceRange.baseMipLevel = 0;
-    viewInfo.subresourceRange.levelCount = 1;
-    viewInfo.subresourceRange.baseArrayLayer = 0;
-    viewInfo.subresourceRange.layerCount = 1;
-
-    VK_CHECK(vkCreateImageView(this->device.getHandle(), &viewInfo, this->device.getAllocator(), &this->imageViews[i]));
-  }
-}
 VkFormat Swapchain::findDepthFormat() const {
   return device.findSupportedFormat(
     { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
@@ -180,57 +231,3 @@ VkFormat Swapchain::findDepthFormat() const {
     VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
   );
 }
-
-void Swapchain::createDepthResources() {
-  this->depthFormat = this->findDepthFormat();
-  this->depthImages.reserve(this->images.size());
-
-  for (uint32_t i = 0; i < this->depthImages.size(); i++) {
-    ImageCreateInfo createInfo{};
-    createInfo.type = VK_IMAGE_TYPE_2D;
-    createInfo.extent.width = this->swapChainExtent.width;
-    createInfo.extent.height = this->swapChainExtent.height;
-    createInfo.format = this->depthFormat;
-    createInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
-    createInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
-    createInfo.memoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-    createInfo.createView = true;
-    createInfo.viewAspectFlags = VK_IMAGE_ASPECT_DEPTH_BIT;
-    this->depthImages.emplace_back(this->device, createInfo);
-  }
-}
-
-/* void Swapchain::createSyncObjects() {
-  this->imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-  this->renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-  this->inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
-  this->imagesInFlight.resize(this->images.size(), VK_NULL_HANDLE);
-
-  VkSemaphoreCreateInfo semaphoreInfo = {};
-  semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-  VkFenceCreateInfo fenceInfo = {};
-  fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-  fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
-  for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-    VK_CHECK(vkCreateSemaphore(
-      device.getHandle(), 
-      &semaphoreInfo, 
-      this->device.getAllocator(), 
-      &this->imageAvailableSemaphores[i]
-    ));
-    VK_CHECK(vkCreateSemaphore(
-      device.getHandle(), 
-      &semaphoreInfo, 
-      this->device.getAllocator(), 
-      &this->renderFinishedSemaphores[i]
-    ));
-    VK_CHECK(vkCreateFence(
-      device.getHandle(), 
-      &fenceInfo, 
-      this->device.getAllocator(), 
-      &this->inFlightFences[i]
-    ));
-  }
-} */

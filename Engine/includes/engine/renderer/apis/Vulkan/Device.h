@@ -61,6 +61,7 @@ namespace Engine::Renderers::Vulkan {
     Device& operator=(Device&&) = delete;
 
     VkInstance getInstance() const { return this->instance; }
+    operator VkDevice() const { return this->logicalDevice; }
     VkDevice getHandle() const { return this->logicalDevice; }
     const VkAllocationCallbacks* getAllocator() const { return this->allocator; }
     VkPhysicalDevice getPhysicalDevice() const { return this->physicalDevice; }
@@ -75,6 +76,8 @@ namespace Engine::Renderers::Vulkan {
     VkQueue getPresentQueue() const { return this->queues.present; }
     VkQueue getTransferQueue() const { return this->queues.transfer; }
 
+    VkCommandPool getGraphicsCommandPool() const { return this->graphicsCommandPool; }
+
     void waitIdle() const { vkDeviceWaitIdle(this->logicalDevice); }
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
@@ -86,6 +89,8 @@ namespace Engine::Renderers::Vulkan {
     void createSurface();
     void pickPhysicalDevice();
     void createLogicalDevice();
+    void createGraphicsCommandPool();
+
   private:
     std::vector<std::string_view> getRequiredExtensions() const;
     bool checkValidationLayerSupport() const;
@@ -109,6 +114,8 @@ namespace Engine::Renderers::Vulkan {
     PhysicalDeviceInfo physicalDeviceInfo;
     VkDevice logicalDevice = VK_NULL_HANDLE;
     Queues queues;
+
+    VkCommandPool graphicsCommandPool = VK_NULL_HANDLE;
 
     const std::vector<const char*> validationLayers = { "VK_LAYER_KHRONOS_validation" };
     const std::vector<std::string_view> deviceExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };

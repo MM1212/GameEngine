@@ -3,6 +3,10 @@
 #include "defines.h"
 #include "Device.h"
 #include "Image.h"
+#include "Framebuffer.h"
+#include "RenderPass.h"
+
+#include <engine/utils/memory.h>
 
 #include <glm/glm.hpp>
 #include <vulkan/vulkan.h>
@@ -15,25 +19,31 @@ namespace Engine::Renderers::Vulkan {
     VkExtent2D windowExtent{};
     std::shared_ptr<Swapchain> oldSwapchain = nullptr;
     bool vSync = false;
+    RenderPassCreateInfo mainRenderPassCreateInfo;
   };
   class Swapchain {
   public:
     static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
-    Swapchain(Device& device, SwapchainCreateInfo createInfo);
+    Swapchain(Device& device, const SwapchainCreateInfo& createInfo);
     ~Swapchain();
 
     Swapchain(const Swapchain&) = delete;
     Swapchain& operator=(const Swapchain&) = delete;
 
+    operator VkSwapchainKHR() const { return this->handle; }
     VkSwapchainKHR getHandle() const { return this->handle; }
-    VkExtent2D getExtent() const { return this->windowExtent; }
-    uint32_t width() const { return this->windowExtent.width; }
-    uint32_t height() const { return this->windowExtent.height; }
+    VkExtent2D getExtent() const { return this->swapChainExtent; }
+    uint32_t width() const { return this->swapChainExtent.width; }
+    uint32_t height() const { return this->swapChainExtent.height; }
+    RenderPass& getMainRenderPass() const { return *this->mainRenderPass; }
+    uint32_t getImageCount() const { return static_cast<uint32_t>(this->images.size()); }
     VkFormat getImageFormat() const { return this->imageFormat.format; }
     VkImageView getImageView(uint32_t index) const { return this->imageViews[index]; }
+    const std::vector<VkImageView>& getImageViews() const { return this->imageViews; }
     VkFormat getDepthFormat() const { return this->depthFormat; }
     VkImageView getDepthImageView(uint32_t index) const { return this->depthImages[index].getView(); }
-    float getAspectRatio() const { return static_cast<float>(this->windowExtent.width) / static_cast<float>(this->windowExtent.height); }
+    const std::vector<Image>& getDepthImages() const { return this->depthImages; }
+    float getAspectRatio() const { return static_cast<float>(this->swapChainExtent.width) / static_cast<float>(this->windowExtent.height); }
     bool compareFormats(const Swapchain& other) const {
       return this->imageFormat.format == other.imageFormat.format &&
         this->imageFormat.colorSpace == other.imageFormat.colorSpace;
@@ -47,11 +57,12 @@ namespace Engine::Renderers::Vulkan {
     );
     VkResult presentImage(uint32_t imageIndex, VkSemaphore renderFinishedSemaphore);
   private:
-    void init();
+    void init(const SwapchainCreateInfo& createInfo);
     void createSwapChain();
     void createImageViews();
     void createDepthResources();
-    // void createSyncObjects();
+    void createMainRenderPass(const RenderPassCreateInfo& createInfo);
+    void createFramebuffers();
 
     // Helper functions
     VkSurfaceFormatKHR chooseSurfaceFormat(
@@ -62,10 +73,14 @@ namespace Engine::Renderers::Vulkan {
     VkFormat findDepthFormat() const;
   private:
     Device& device;
+
     VkSwapchainKHR handle = VK_NULL_HANDLE;
     VkExtent2D windowExtent;
     bool vSync = false;
     std::shared_ptr<Swapchain> oldSwapchain = nullptr;
+
+    Scope<RenderPass> mainRenderPass = nullptr;
+    std::vector<Framebuffer> framebuffers;
 
     VkSurfaceFormatKHR imageFormat;
     VkFormat depthFormat;
@@ -75,10 +90,6 @@ namespace Engine::Renderers::Vulkan {
     std::vector<VkImageView> imageViews;
     std::vector<Image> depthImages;
 
-    // std::vector<VkSemaphore> imageAvailableSemaphores;
-    // std::vector<VkSemaphore> renderFinishedSemaphores;
-    // std::vector<VkFence> inFlightFences;
-    // std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
   };
 }

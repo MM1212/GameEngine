@@ -37,11 +37,11 @@ Image& Image::operator=(Image&& other) {
 
 Image::~Image() {
   if (this->view != VK_NULL_HANDLE)
-    vkDestroyImageView(this->device.getHandle(), this->view, this->device.getAllocator());
+    vkDestroyImageView(this->device, this->view, this->device.getAllocator());
   if (this->memory != VK_NULL_HANDLE)
-    vkFreeMemory(this->device.getHandle(), this->memory, this->device.getAllocator());
+    vkFreeMemory(this->device, this->memory, this->device.getAllocator());
   if (this->handle != VK_NULL_HANDLE)
-    vkDestroyImage(this->device.getHandle(), this->handle, this->device.getAllocator());
+    vkDestroyImage(this->device, this->handle, this->device.getAllocator());
 }
 
 void Image::init(const ImageCreateInfo& createInfo) {
@@ -57,18 +57,18 @@ void Image::init(const ImageCreateInfo& createInfo) {
   imageInfo.samples = createInfo.samples;
   imageInfo.sharingMode = createInfo.sharingMode;
 
-  VK_CHECK(vkCreateImage(this->device.getHandle(), &imageInfo, this->device.getAllocator(), &this->handle));
+  VK_CHECK(vkCreateImage(this->device, &imageInfo, this->device.getAllocator(), &this->handle));
 
   VkMemoryRequirements memoryRequirements;
-  vkGetImageMemoryRequirements(this->device.getHandle(), this->handle, &memoryRequirements);
+  vkGetImageMemoryRequirements(this->device, this->handle, &memoryRequirements);
 
   VkMemoryAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
   allocateInfo.allocationSize = memoryRequirements.size;
   allocateInfo.memoryTypeIndex = this->device.findMemoryType(memoryRequirements.memoryTypeBits, this->memoryProperties);
   ASSERT(allocateInfo.memoryTypeIndex != -1, "Failed to find suitable memory type");
 
-  VK_CHECK(vkAllocateMemory(this->device.getHandle(), &allocateInfo, this->device.getAllocator(), &this->memory));
-  VK_CHECK(vkBindImageMemory(this->device.getHandle(), this->handle, this->memory, 0));
+  VK_CHECK(vkAllocateMemory(this->device, &allocateInfo, this->device.getAllocator(), &this->memory));
+  VK_CHECK(vkBindImageMemory(this->device, this->handle, this->memory, 0));
 
   if (createInfo.createView)
     this->createView(createInfo.viewCreateInfo);
@@ -79,9 +79,21 @@ void Image::createView(const ImageViewCreateInfo& createViewInfo) {
   this->viewAspectFlags = viewAspectFlags;
   VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
   viewInfo.image = this->handle;
-  viewInfo.viewType = createViewInfo.type;
+  switch (this->type) {
+  case VK_IMAGE_TYPE_1D:
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D;
+    break;
+  case VK_IMAGE_TYPE_2D:
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+    break;
+  case VK_IMAGE_TYPE_3D:
+    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
+    break;
+  default:
+    ASSERT(false, "Invalid image type");
+  };
   viewInfo.format = createViewInfo.format != VK_FORMAT_UNDEFINED ? createViewInfo.format : this->format;
   viewInfo.subresourceRange = createViewInfo.subresourceRange;
 
-  VK_CHECK(vkCreateImageView(this->device.getHandle(), &viewInfo, this->device.getAllocator(), &this->view));
+  VK_CHECK(vkCreateImageView(this->device, &viewInfo, this->device.getAllocator(), &this->view));
 }

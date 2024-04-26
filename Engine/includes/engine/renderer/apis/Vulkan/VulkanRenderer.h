@@ -4,6 +4,10 @@
 #include "Device.h"
 #include "Swapchain.h"
 #include "RenderPass.h"
+#include "CommandBuffer.h"
+#include "Framebuffer.h"
+#include "Fence.h"
+#include "Semaphore.h"
 
 #include <core/Application.h>
 #include <vulkan/vulkan.h>
@@ -31,11 +35,21 @@ namespace Engine::Renderers::Vulkan {
     }
     void init();
     void recreateSwapchain();
-    void createMainRenderPass();
+    void createGraphicsCommandBuffers();
+    void recreateOnResize();
+    void createSyncObjects();
+
   private:
     Vulkan::Device device;
-    std::unique_ptr<Swapchain> swapchain = nullptr;
-    std::unique_ptr<RenderPass> mainRenderPass = nullptr;
+
+    Scope<Swapchain> swapchain = nullptr;
+
+    std::vector<CommandBuffer> graphicsCommandBuffers;
+    std::vector<Semaphore> imageAvailableSemaphores;
+    std::vector<Semaphore> renderFinishedSemaphores;
+    std::vector<Fence> inFlightFences;
+    std::vector<Fence*> imagesInFlightFences;
+
     uint32_t currentImageIndex = 0;
     uint32_t currentFrameIndex = 0;
     bool isFrameStarted = false;

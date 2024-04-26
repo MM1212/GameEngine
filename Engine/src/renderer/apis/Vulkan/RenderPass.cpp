@@ -5,8 +5,13 @@
 
 using namespace Engine::Renderers::Vulkan;
 
-RenderPass::RenderPass(Renderer& renderer, const RenderPassCreateInfo& createInfo)
-  : renderer(renderer), renderArea(createInfo.renderArea),
+RenderPass::RenderPass(
+  Device& device,
+  Swapchain& swapchain,
+  const RenderPassCreateInfo& createInfo
+)
+  : device(device), swapchain(swapchain),
+  renderArea(createInfo.renderArea),
   clearColor(createInfo.clearColor),
   depth(createInfo.depth), stencil(createInfo.stencil) {
   this->init();
@@ -14,7 +19,7 @@ RenderPass::RenderPass(Renderer& renderer, const RenderPassCreateInfo& createInf
 
 RenderPass::~RenderPass() {
   if (this->handle)
-    vkDestroyRenderPass(this->device().getHandle(), this->handle, this->device().getAllocator());
+    vkDestroyRenderPass(this->device, this->handle, this->device.getAllocator());
 }
 
 void RenderPass::init() {
@@ -22,7 +27,7 @@ void RenderPass::init() {
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 
   VkAttachmentDescription colorAttachment = {};
-  colorAttachment.format = this->swapchain().getImageFormat();
+  colorAttachment.format = this->swapchain.getImageFormat();
   colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
   colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -39,7 +44,7 @@ void RenderPass::init() {
   subpass.pColorAttachments = &colorAttachmentRef;
 
   VkAttachmentDescription depthAttachment = {};
-  depthAttachment.format = this->swapchain().getDepthFormat();
+  depthAttachment.format = this->swapchain.getDepthFormat();
   depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
   depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -73,9 +78,9 @@ void RenderPass::init() {
   createInfo.pDependencies = &dependency;
 
   VK_CHECK(vkCreateRenderPass(
-    this->device().getHandle(),
+    this->device,
     &createInfo,
-    this->device().getAllocator(),
+    this->device.getAllocator(),
     &this->handle
   ));
 }
@@ -96,21 +101,13 @@ void RenderPass::begin(CommandBuffer& cmdBuffer, VkFramebuffer frameBuffer, VkSu
   beginInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
   beginInfo.pClearValues = clearValues.data();
 
-  vkCmdBeginRenderPass(cmdBuffer.getHandle(), &beginInfo, contents);
+  vkCmdBeginRenderPass(cmdBuffer, &beginInfo, contents);
   this->state = State::InRenderPass;
 }
 
 void RenderPass::end(CommandBuffer& cmdBuffer) {
   ASSERT(this->state == State::InRenderPass, "RenderPass is not in render pass state");
 
-  vkCmdEndRenderPass(cmdBuffer.getHandle());
+  vkCmdEndRenderPass(cmdBuffer);
   this->state = State::RecordingEnded;
-}
-
-Swapchain& RenderPass::swapchain() const {
-  return this->renderer.getSwapchain();
-}
-
-Device& RenderPass::device() const {
-  return this->renderer.getDevice();
 }

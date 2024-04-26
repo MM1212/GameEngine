@@ -17,6 +17,7 @@ Device::Device(ApplicationInfo& appInfo, Window& window)
   this->pickPhysicalDevice();
   this->createLogicalDevice();
   LOG_RENDERER_INFO("Vulkan device created.");
+  this->createGraphicsCommandPool();
 }
 
 Device::~Device() {
@@ -482,4 +483,17 @@ uint32_t Device::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags prope
   }
   LOG_RENDERER_WARN("Failed to find suitable memory type!");
   return static_cast<uint32_t>(-1);
+}
+
+void Device::createGraphicsCommandPool() {
+  VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+  createInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  createInfo.queueFamilyIndex = this->physicalDeviceInfo.queueFamilyIndices.graphicsFamily;
+  VK_CHECK(vkCreateCommandPool(
+    this->getHandle(),
+    &createInfo,
+    this->getAllocator(),
+    &this->graphicsCommandPool
+  ));
+  LOG_RENDERER_INFO("Graphics command pool created.");
 }
