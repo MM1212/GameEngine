@@ -5,6 +5,7 @@
 
 #include <array>
 #include <unordered_set>
+#include <functional>
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 
@@ -47,12 +48,15 @@ namespace Engine::Input {
       bool isReleased(C key) const {
         return !this->isPressed(key);
       }
-      void onEvent(C key, bool pressed) {
+      bool onEvent(C key, bool pressed) {
         ASSERT(key < M, "Key out of range!");
         auto& state = this->getState(key);
+        if (state.pressed == pressed)
+          return false;
         state.wasPressed = state.pressed;
         state.pressed = pressed;
         this->toUpdate.insert(key);
+        return true;
       }
       void update() {
         for (auto key : this->toUpdate) {

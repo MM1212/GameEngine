@@ -108,6 +108,11 @@ namespace Engine {
       }
       return false;
     }
+    template <typename T, typename... Args>
+    bool emit(Args&&... args) {
+      T event(std::forward<Args>(args)...);
+      return this->emit(event);
+    }
 
     template <typename T, typename... Args>
     bool queue(Args&&... args) {
@@ -122,4 +127,5 @@ namespace Engine {
     uint32_t listenerId = 0;
     static EventSystem* instance;
   };
+
 }

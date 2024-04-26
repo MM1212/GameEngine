@@ -43,4 +43,10 @@ namespace Engine::Input {
   void SetMouseMode(MouseMode mode) {
     GetManager().setMouseMode(mode);
   }
+  MouseMode GetMouseMode() {
+    return GetManager().getMouseMode();
+  }
+  void SetMousePosition(const glm::vec2& position) {
+    GetManager().setMousePosition(position);
+  }
 }

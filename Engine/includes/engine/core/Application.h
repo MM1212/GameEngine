@@ -50,8 +50,8 @@ namespace Engine {
     Input::InputManager& getInputManager() { return *this->platform.input; }
   protected:
     ApplicationInfo spec;
-    Platform platform;
     EventSystem eventSystem;
+    Platform platform;
     std::unique_ptr<RendererAPI> renderer;
     bool running = false;
     bool suspended = false;

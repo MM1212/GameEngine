@@ -1,6 +1,7 @@
 #include <engine/platform/Platform.h>
 #include "engine/input/InputManager.h"
 #include <GLFW/glfw3.h>
+#include <events/EventSystem.h>
 
 using namespace Engine::Input;
 
@@ -13,28 +14,62 @@ void InputManager::GlfwKeyCallback(GLFWwindow* window, int key, int scancode, in
   (void)scancode;
   (void)mods;
   auto manager = GetManager(window);
-  manager->keyboard.onEvent(key, action != GLFW_RELEASE);
+
+  if (manager->keyboard.onEvent(key, action != GLFW_RELEASE))
+    EventSystem::Get()->emit<KeyEvent>(key, action != GLFW_RELEASE);
 }
 
 void InputManager::GlfwMouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
   (void)mods;
   auto manager = GetManager(window);
-  manager->mouseButtons.onEvent(button, action != GLFW_RELEASE);
+
+  if (manager->mouseButtons.onEvent(button, action != GLFW_RELEASE))
+    EventSystem::Get()->emit<MouseButtonEvent>(button, action != GLFW_RELEASE);
 }
 
 void InputManager::GlfwCursorPosCallback(GLFWwindow* window, double x, double y) {
   auto manager = GetManager(window);
+  glm::vec2 position = { x, y };
+  if (position == manager->mouse.position) return;
   manager->mouse.lastPosition = manager->mouse.position;
   manager->mouse.position = { x, y };
   manager->mouse.delta = manager->mouse.position - manager->mouse.lastPosition;
+  EventSystem::Get()->emit<MouseMoveEvent>(manager->mouse.position, manager->mouse.delta);
 }
 
 void InputManager::GlfwScrollCallback(GLFWwindow* window, double x, double y) {
   auto manager = GetManager(window);
+
+  // some mouse wheels report random offsets, so we clamp them to -1, 0, 1
+  x = x < 0 ? -1 : x > 0 ? 1 : 0;
+  y = y < 0 ? -1 : y > 0 ? 1 : 0;
+  if (x == 0 && y == 0) return;
   manager->mouse.scrollOffset = { x, y };
+  EventSystem::Get()->emit<MouseScrollEvent>(manager->mouse.scrollOffset);
 }
 
-InputManager::InputManager(Platform& platform) : platform(platform) {}
+InputManager::InputManager(Platform& platform) : platform(platform) {
+#ifdef _DEBUG
+  EventSystem::Get()->on<KeyEvent>([](KeyEvent& event) -> bool {
+    LOG_TRACE("Key: {}[{}] {}", static_cast<char>(event.key), event.key, event.pressed ? "pressed" : "released");
+    return false;
+    });
+  EventSystem::Get()->on<MouseButtonEvent>([](MouseButtonEvent& event) -> bool {
+    LOG_TRACE("Mouse Button: {} {}", event.button, event.pressed ? "pressed" : "released");
+    return false;
+    });
+#if 0
+  EventSystem::Get()->on<MouseMoveEvent>([](MouseMoveEvent& event) -> bool {
+    LOG_TRACE("Mouse Position: ({}, {}) Delta: ({}, {})", event.position.x, event.position.y, event.delta.x, event.delta.y);
+    return false;
+    });
+  EventSystem::Get()->on<MouseScrollEvent>([](MouseScrollEvent& event) -> bool {
+    LOG_TRACE("Mouse Scroll: ({}, {})", event.offset.x, event.offset.y);
+    return false;
+    });
+#endif
+#endif
+}
 
 GLFWwindow* InputManager::getWindowHandle() {
   return reinterpret_cast<GLFWwindow*>(this->platform.window->getHandle());
