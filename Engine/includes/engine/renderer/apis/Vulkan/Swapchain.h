@@ -31,6 +31,8 @@ namespace Engine::Renderers::Vulkan {
     uint32_t height() const { return this->windowExtent.height; }
     VkFormat getImageFormat() const { return this->imageFormat.format; }
     VkImageView getImageView(uint32_t index) const { return this->imageViews[index]; }
+    VkFormat getDepthFormat() const { return this->depthFormat; }
+    VkImageView getDepthImageView(uint32_t index) const { return this->depthImages[index].getView(); }
     float getAspectRatio() const { return static_cast<float>(this->windowExtent.width) / static_cast<float>(this->windowExtent.height); }
     bool compareFormats(const Swapchain& other) const {
       return this->imageFormat.format == other.imageFormat.format &&

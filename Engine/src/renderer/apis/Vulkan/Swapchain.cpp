@@ -15,6 +15,8 @@ Swapchain::~Swapchain() {
     vkDestroyImageView(this->device.getHandle(), imageView, this->device.getAllocator());
   vkDestroySwapchainKHR(this->device.getHandle(), this->handle, this->device.getAllocator());
   LOG_RENDERER_INFO("Swapchain destroyed");
+
+  // clean up sync resources
   for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
     vkDestroySemaphore(this->device.getHandle(), this->imageAvailableSemaphores[i], this->device.getAllocator());
     vkDestroySemaphore(this->device.getHandle(), this->renderFinishedSemaphores[i], this->device.getAllocator());

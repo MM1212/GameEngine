@@ -4,7 +4,8 @@
 using Engine::Renderers::Vulkan::Renderer;
 
 Renderer::Renderer(ApplicationInfo& appInfo, Platform& platform)
-  : RendererAPI(appInfo, platform, RendererAPI::API::Vulkan), device(appInfo, *platform.window) {
+  : RendererAPI(appInfo, platform, RendererAPI::API::Vulkan),
+  device(appInfo, *platform.window) {
   this->init();
 }
 
@@ -12,6 +13,7 @@ Renderer::~Renderer() {}
 
 void Renderer::init() {
   this->recreateSwapchain();
+  this->createMainRenderPass();
 }
 
 void Renderer::recreateSwapchain() {
@@ -32,6 +34,15 @@ void Renderer::recreateSwapchain() {
     this->swapchain = std::make_unique<Swapchain>(this->device, createInfo);
     ASSERT(this->swapchain->compareFormats(*createInfo.oldSwapchain), "Swapchain image format has changed");
   }
+}
+
+void Renderer::createMainRenderPass() {
+  RenderPassCreateInfo createInfo{};
+  createInfo.renderArea.size = { this->swapchain->width(), this->swapchain->height() };
+  createInfo.clearColor = { 0.1f, 0.1f, 0.1f, 1.0f };
+  createInfo.depth = 1.0f;
+  createInfo.stencil = 0;
+  this->mainRenderPass = std::make_unique<RenderPass>(*this, createInfo);
 }
 
 bool Renderer::beginFrame() {

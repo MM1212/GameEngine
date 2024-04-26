@@ -346,7 +346,7 @@ void Device::pickPhysicalDevice() {
   requirements.present = true;
   requirements.transfer = true;
   requirements.sampleAnisotropy = true;
-  requirements.discreteGpu = true;
+  requirements.discreteGpu = false;
   requirements.extensions = this->deviceExtensions;
 
   for (auto device : devices) {
@@ -428,8 +428,8 @@ void Device::createLogicalDevice() {
     createInfo.queueFamilyIndex = indices[i];
     createInfo.queueCount = 1;
     // TODO: required for MT rendering
-    if (indices[i] == indicesInfo.graphicsFamily)
-      createInfo.queueCount = 2;
+    // if (indices[i] == indicesInfo.graphicsFamily)
+    //   createInfo.queueCount = 2;
     createInfo.pQueuePriorities = queuePriorities.data();
     LOG_TRACE("Queue Family: {}, Queue Count: {}", indices[i], createInfo.queueCount);
   }
