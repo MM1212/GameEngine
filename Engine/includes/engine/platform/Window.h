@@ -51,12 +51,10 @@ namespace Engine {
     const glm::uvec2& getSize() const { return this->size; }
     uint32_t getWidth() const { return this->size.x; }
     uint32_t getHeight() const { return this->size.y; }
-    bool wasResized() const { return this->resized; }
     bool shouldClose() const;
     void close();
     void pollEvents();
     void waitEvents();
-    void resetResizedFlag() { this->resized = false; }
     void init();
     // Vulkan specific API Calls (defined in platform/apis/Vulkan/Window.cpp)
     int createVulkanSurface(void* device);
@@ -65,7 +63,6 @@ namespace Engine {
     Platform& platform;
     WindowSpecs spec;
     glm::uvec2 size;
-    bool resized = false;
     const std::string_view title;
     void* handle = nullptr;
   };

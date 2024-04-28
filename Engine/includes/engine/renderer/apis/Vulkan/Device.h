@@ -78,7 +78,7 @@ namespace Engine::Renderers::Vulkan {
 
     VkCommandPool getGraphicsCommandPool() const { return this->graphicsCommandPool; }
 
-    void waitIdle() const { vkDeviceWaitIdle(this->logicalDevice); }
+    VkResult waitIdle() const { return vkDeviceWaitIdle(this->logicalDevice); }
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
   private:

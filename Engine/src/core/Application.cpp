@@ -22,10 +22,18 @@ namespace Engine {
     }
     // else
     //   std::filesystem::current_path(spec.args[0]);
-    this->eventSystem.on<WindowCloseEvent>(([this](WindowCloseEvent& ev) {
+    this->eventSystem.on<WindowCloseEvent>([this](WindowCloseEvent& ev) {
       this->running = false;
       return true;
-    }));
+    });
+    this->eventSystem.on<WindowResizeEvent>([this](WindowResizeEvent& ev) {
+      this->suspended = ev.width == 0 || ev.height == 0;
+      if (this->suspended)
+        LOG_APP_INFO("Window minimized");
+      else
+        LOG_APP_INFO("Window resized to {}x{}", ev.width, ev.height);
+      return this->suspended;
+    }, 101);
   }
 
   Application::~Application() {
@@ -59,12 +67,19 @@ namespace Engine {
 
     while (this->running) {
       this->platform.update();
+      this->eventSystem.dispatchQueue();
+      if (this->suspended) {
+        this->platform.window->waitEvents();
+        continue;
+      }
       auto now = std::chrono::high_resolution_clock::now();
       DeltaTime dt = std::chrono::duration<float, std::chrono::seconds::period>(now - lastTime).count();
       lastTime = now;
       this->onUpdate(dt);
+      if (!this->renderer->beginFrame())
+        continue;
       this->onRender(dt);
-      this->eventSystem.dispatchQueue();
+      this->renderer->endFrame();
     }
   }
 }

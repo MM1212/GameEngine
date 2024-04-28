@@ -18,8 +18,9 @@ DiscardableCommandBuffer::~DiscardableCommandBuffer() {
   this->endRecording();
 }
 
-void DiscardableCommandBuffer::endRecording() {
+DiscardableCommandBuffer& DiscardableCommandBuffer::endRecording() {
   this->CommandBuffer::endRecording();
   this->submit(this->submitQueue, this->submitInfo);
   this->free();
+  return *this;
 }

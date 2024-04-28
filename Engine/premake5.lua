@@ -12,16 +12,14 @@ project "Engine"
   files {
     "includes/**.h",
     "src/**.cpp",
-    "shaders/**.vert",
-    "shaders/**.frag",
+    "../assets/shaders/**.vert",
+    "../assets/shaders/**.frag",
     "%{Vendors.ImGuizmo:getPath()}/ImGuizmo.cpp"
   }
 
   defines {
     "_CRT_SECURE_NO_WARNINGS",
-    "GLFW_INCLUDE_NONE",
-    "GLM_FORCE_RADIANS",
-    "GLM_FORCE_DEPTH_ZERO_TO_ONE"
+    "GLFW_INCLUDE_NONE"
   }
 
   includedirs {
@@ -46,7 +44,7 @@ project "Engine"
 
   filter "system:windows"
     defines { '_WIN32' }
-  
+
   filter "system:linux"
     defines { '_LINUX' }
 

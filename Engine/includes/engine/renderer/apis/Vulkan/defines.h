@@ -2,9 +2,10 @@
 
 #include <vulkan/vulkan.h>
 #include <utils/logger.h>
+#include "utils.h"
 
 #ifdef _DEBUG
-#define VK_CHECK(x) ASSERT_MSG(x == VK_SUCCESS, "Vulkan API Call failed with error code {}", x)
+#define VK_CHECK(x) ASSERT_MSG(x == VK_SUCCESS, "Vulkan API Call failed with error code {}[{}] - {}", ::Engine::Renderers::Vulkan::CallResultToString(x), x, ::Engine::Renderers::Vulkan::CallResultToString(x, true))
 #else
 #define VK_CHECK(x) x
 #endif

@@ -17,7 +17,7 @@ namespace Engine::Renderers::Vulkan {
     NotAllocated
   };
   struct RenderPassRenderArea {
-    glm::ivec2 offset;
+    glm::ivec2 offset = { 0, 0 };
     union {
       glm::uvec2 size;
       struct {
@@ -27,7 +27,7 @@ namespace Engine::Renderers::Vulkan {
     };
   };
   struct RenderPassCreateInfo {
-    RenderPassRenderArea renderArea;
+    RenderPassRenderArea renderArea{};
     glm::vec4 clearColor;
     float depth;
     uint32_t stencil;
@@ -61,7 +61,7 @@ namespace Engine::Renderers::Vulkan {
     VkRenderPass handle;
     State state = State::NotAllocated;
 
-    RenderArea renderArea;
+    RenderArea renderArea{};
     glm::vec4 clearColor;
     float depth;
     uint32_t stencil;

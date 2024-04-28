@@ -5,6 +5,8 @@
 #include "Image.h"
 #include "Framebuffer.h"
 #include "RenderPass.h"
+#include "Semaphore.h"
+#include "Fence.h"
 
 #include <engine/utils/memory.h>
 
@@ -23,7 +25,6 @@ namespace Engine::Renderers::Vulkan {
   };
   class Swapchain {
   public:
-    static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 2;
     Swapchain(Device& device, const SwapchainCreateInfo& createInfo);
     ~Swapchain();
 
@@ -35,7 +36,9 @@ namespace Engine::Renderers::Vulkan {
     VkExtent2D getExtent() const { return this->swapChainExtent; }
     uint32_t width() const { return this->swapChainExtent.width; }
     uint32_t height() const { return this->swapChainExtent.height; }
+    uint32_t getMaxFramesInFlight() const { return this->maxFramesInFlight; }
     RenderPass& getMainRenderPass() const { return *this->mainRenderPass; }
+    Framebuffer& getFramebuffer(uint32_t index) { return this->framebuffers[index]; }
     uint32_t getImageCount() const { return static_cast<uint32_t>(this->images.size()); }
     VkFormat getImageFormat() const { return this->imageFormat.format; }
     VkImageView getImageView(uint32_t index) const { return this->imageViews[index]; }
@@ -51,8 +54,8 @@ namespace Engine::Renderers::Vulkan {
 
     VkResult acquireNextImage(
       uint32_t* imageIndex,
-      VkSemaphore imageAvailableSemaphore,
-      VkFence fence = VK_NULL_HANDLE,
+      Semaphore& imageAvailableSemaphore,
+      Fence& fence,
       uint64_t timeout = std::numeric_limits<uint64_t>::max()
     );
     VkResult presentImage(uint32_t imageIndex, VkSemaphore renderFinishedSemaphore);
@@ -77,6 +80,7 @@ namespace Engine::Renderers::Vulkan {
     VkSwapchainKHR handle = VK_NULL_HANDLE;
     VkExtent2D windowExtent;
     bool vSync = false;
+    uint32_t maxFramesInFlight = 0;
     std::shared_ptr<Swapchain> oldSwapchain = nullptr;
 
     Scope<RenderPass> mainRenderPass = nullptr;

@@ -48,6 +48,8 @@ namespace Engine {
 
     Window& getWindow() { return *this->platform.window; }
     Input::InputManager& getInputManager() { return *this->platform.input; }
+    bool isRunning() const { return this->running; }
+    bool isSuspended() const { return this->suspended; }
   protected:
     ApplicationInfo spec;
     EventSystem eventSystem;

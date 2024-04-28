@@ -12,7 +12,11 @@ workspace "GameEngine"
   startproject "Editor"
   configurations { "Debug", "Release" }
   flags { "MultiProcessorCompile" }
-  defines { "_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING" }
+  defines {
+    "_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING",
+    "GLM_FORCE_RADIANS",
+    "GLM_FORCE_DEPTH_ZERO_TO_ONE"
+  }
   filter "configurations:Debug"
     defines {
       "ENABLE_ENGINE_LOGGING",
@@ -36,6 +40,7 @@ group ""
 
 group "Core"
   include "Engine"
+  include "assets"
 group ""
 
 group "Tools"

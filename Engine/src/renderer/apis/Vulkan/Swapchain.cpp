@@ -13,6 +13,7 @@ Swapchain::Swapchain(
   vSync(createInfo.vSync),
   oldSwapchain(createInfo.oldSwapchain) {
   this->init(createInfo);
+  this->oldSwapchain = nullptr;
 }
 
 
@@ -84,6 +85,7 @@ void Swapchain::createSwapChain() {
   vkGetSwapchainImagesKHR(this->device, this->handle, &imageCount, nullptr);
   this->images.resize(imageCount);
   vkGetSwapchainImagesKHR(this->device, this->handle, &imageCount, this->images.data());
+  this->maxFramesInFlight = std::max(1u, imageCount - 1);
 }
 
 void Swapchain::createImageViews() {
@@ -148,14 +150,16 @@ void Swapchain::createFramebuffers() {
 // we'll do sanity checks on the VkResult when we call this function
 VkResult Swapchain::acquireNextImage(
   uint32_t* imageIndex,
-  VkSemaphore imageAvailableSemaphore,
-  VkFence fence,
+  Semaphore& imageAvailableSemaphore,
+  Fence& fence,
   uint64_t timeout
 ) {
+  fence.wait(timeout);
+
   return vkAcquireNextImageKHR(
     this->device,
     this->handle, timeout,
-    imageAvailableSemaphore, fence,
+    imageAvailableSemaphore, nullptr,
     imageIndex
   );
 }
@@ -168,8 +172,9 @@ VkResult Swapchain::presentImage(uint32_t imageIndex, VkSemaphore renderFinished
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = &this->handle;
   presentInfo.pImageIndices = &imageIndex;
-  auto result = vkQueuePresentKHR(this->device.getQueues().present, &presentInfo);
-  this->currentFrame = (this->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+
+  auto result = vkQueuePresentKHR(this->device.getPresentQueue(), &presentInfo);
+  this->currentFrame = (this->currentFrame + 1) % this->maxFramesInFlight;
   return result;
 }
 

@@ -54,16 +54,17 @@ void CommandBuffer::init() {
   this->state = State::Ready;
 }
 
-void CommandBuffer::beginRecording(VkCommandBufferUsageFlags flags) {
+CommandBuffer& CommandBuffer::beginRecording(VkCommandBufferUsageFlags flags) {
   ASSERT(this->state == State::Ready, "Invalid command buffer state");
   VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
   beginInfo.flags = flags;
 
   VK_CHECK(vkBeginCommandBuffer(this->handle, &beginInfo));
   this->state = State::Recording;
+  return *this;
 }
 
-void CommandBuffer::beginRecording(
+CommandBuffer& CommandBuffer::beginRecording(
   bool oneTimeSubmit,
   bool renderPassInline,
   bool simultaneousUse
@@ -75,13 +76,14 @@ void CommandBuffer::beginRecording(
     flags |= VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
   if (simultaneousUse)
     flags |= VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-  this->beginRecording(flags);
+  return this->beginRecording(flags);
 }
 
-void CommandBuffer::endRecording() {
+CommandBuffer& CommandBuffer::endRecording() {
   ASSERT(this->state == State::Recording || this->state == State::InRenderPass, "Invalid command buffer state");
   VK_CHECK(vkEndCommandBuffer(this->handle));
   this->state = State::RecordingEnded;
+  return *this;
 }
 
 void CommandBuffer::submit(VkQueue queue, CommandBufferSubmitInfo info) {
@@ -89,11 +91,11 @@ void CommandBuffer::submit(VkQueue queue, CommandBufferSubmitInfo info) {
   VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &this->handle;
-  submitInfo.waitSemaphoreCount = info.waitSemaphore ? 1 : 0;
-  submitInfo.pWaitSemaphores = &info.waitSemaphore;
+  submitInfo.waitSemaphoreCount = static_cast<uint32_t>(info.waitSemaphores.size());
+  submitInfo.pWaitSemaphores = info.waitSemaphores.data();
   submitInfo.pWaitDstStageMask = &info.waitStage;
-  submitInfo.signalSemaphoreCount = info.signalSemaphore ? 1 : 0;
-  submitInfo.pSignalSemaphores = &info.signalSemaphore;
+  submitInfo.signalSemaphoreCount = static_cast<uint32_t>(info.signalSemaphores.size());
+  submitInfo.pSignalSemaphores = info.signalSemaphores.data();
 
   if (info.resetFence && info.fence)
     info.fence->reset();
@@ -103,13 +105,16 @@ void CommandBuffer::submit(VkQueue queue, CommandBufferSubmitInfo info) {
   this->setAsSubmitted();
 }
 
-void CommandBuffer::reset(bool releaseResources) {
+CommandBuffer& CommandBuffer::reset(bool releaseResources) {
+  if (this->state == State::Ready)
+    return *this;
   ASSERT(this->state == State::RecordingEnded || this->state == State::Submitted, "Invalid command buffer state");
   VkCommandBufferResetFlags flags = 0;
   if (releaseResources)
     flags |= VK_COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT;
   VK_CHECK(vkResetCommandBuffer(this->handle, flags));
   this->state = State::Ready;
+  return *this;
 }
 
 std::vector<CommandBuffer> CommandBuffer::CreateMultiple(

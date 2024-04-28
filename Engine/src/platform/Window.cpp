@@ -55,9 +55,11 @@ void Window::init() {
     auto platform = reinterpret_cast<Platform*>(glfwGetWindowUserPointer(GLFW_WINDOW(handle)));
     if (!platform)
       return;
-    platform->window->resized = true;
-    platform->window->size = { width, height };
-    EventSystem::Get()->queue<WindowResizeEvent>(platform->window->size);
+    glm::uvec2 newSize = { width, height };
+    if (platform->window->size == newSize)
+      return;
+    platform->window->size = newSize;
+    EventSystem::Get()->queueUnique<WindowResizeEvent>(platform->window->size);
   });
   glfwSetWindowCloseCallback(GLFW_WINDOW(this->handle), [](GLFWwindow* handle) {
     EventSystem::Get()->queue<WindowCloseEvent>();

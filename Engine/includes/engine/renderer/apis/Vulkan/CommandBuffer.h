@@ -18,8 +18,8 @@ namespace Engine::Renderers::Vulkan {
   };
   struct CommandBufferSubmitInfo {
     VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_NONE;
-    VkSemaphore waitSemaphore = VK_NULL_HANDLE;
-    VkSemaphore signalSemaphore = VK_NULL_HANDLE;
+    std::vector<VkSemaphore> waitSemaphores;
+    std::vector<VkSemaphore> signalSemaphores;
     bool resetFence = true;
     Fence* fence = nullptr;
   };
@@ -42,15 +42,15 @@ namespace Engine::Renderers::Vulkan {
     VkCommandPool getPool() const { return this->pool; }
     State getState() const { return this->state; }
 
-    void beginRecording(
+    CommandBuffer& beginRecording(
       bool oneTimeSubmit = false,
       bool renderPassInline = false,
       bool simultaneousUse = false
     );
-    void beginRecording(VkCommandBufferUsageFlags flags);
-    virtual void endRecording();
+    CommandBuffer& beginRecording(VkCommandBufferUsageFlags flags);
+    virtual CommandBuffer& endRecording();
     void setAsSubmitted() { this->state = State::Submitted; }
-    void reset(bool releaseResources = false);
+    CommandBuffer& reset(bool releaseResources = false);
     void submit(VkQueue queue, CommandBufferSubmitInfo info = {});
 
     static std::vector<CommandBuffer> CreateMultiple(
@@ -89,7 +89,7 @@ namespace Engine::Renderers::Vulkan {
       bool isPrimary = true
     );
     ~DiscardableCommandBuffer();
-    void endRecording() override;
+    DiscardableCommandBuffer& endRecording() override;
   private:
     VkQueue submitQueue;
     CommandBufferSubmitInfo submitInfo;

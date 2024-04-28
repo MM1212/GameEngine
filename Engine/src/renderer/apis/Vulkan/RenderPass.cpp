@@ -83,10 +83,11 @@ void RenderPass::init() {
     this->device.getAllocator(),
     &this->handle
   ));
+  this->state = State::Ready;
 }
 
 void RenderPass::begin(CommandBuffer& cmdBuffer, VkFramebuffer frameBuffer, VkSubpassContents contents) {
-  ASSERT(this->state == State::Ready, "RenderPass is not ready to begin recording");
+  ASSERT(this->state == State::Ready || this->state == State::RecordingEnded, "RenderPass is not ready to begin recording");
 
   VkRenderPassBeginInfo beginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
   beginInfo.renderPass = this->handle;

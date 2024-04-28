@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer/RendererAPI.h"
+#include "utils.h"
 #include "Device.h"
 #include "Swapchain.h"
 #include "RenderPass.h"
@@ -8,6 +9,8 @@
 #include "Framebuffer.h"
 #include "Fence.h"
 #include "Semaphore.h"
+
+#include "shaders/Object.h"
 
 #include <core/Application.h>
 #include <vulkan/vulkan.h>
@@ -29,20 +32,21 @@ namespace Engine::Renderers::Vulkan {
 
     Device& getDevice() { return this->device; }
     Swapchain& getSwapchain() const { return *this->swapchain; }
+    CommandBuffer& getCurrentGraphicsCommandBuffer() { return this->graphicsCommandBuffers[this->currentImageIndex]; }
   private:
     VkExtent2D getWindowExtent() const {
       return { platform.window->getWidth(), platform.window->getHeight() };
     }
     void init();
-    void recreateSwapchain();
+    bool recreateSwapchain();
     void createGraphicsCommandBuffers();
-    void recreateOnResize();
     void createSyncObjects();
 
   private:
     Vulkan::Device device;
 
     Scope<Swapchain> swapchain = nullptr;
+    bool recreateSwapchainFlag = false;
 
     std::vector<CommandBuffer> graphicsCommandBuffers;
     std::vector<Semaphore> imageAvailableSemaphores;
@@ -50,8 +54,10 @@ namespace Engine::Renderers::Vulkan {
     std::vector<Fence> inFlightFences;
     std::vector<Fence*> imagesInFlightFences;
 
+    Shaders::Object objectShader;
+
     uint32_t currentImageIndex = 0;
     uint32_t currentFrameIndex = 0;
-    bool isFrameStarted = false;
+    bool hasFrameStarted = false;
   };
 }

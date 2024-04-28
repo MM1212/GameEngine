@@ -31,10 +31,10 @@ namespace Engine {
       uint32_t handle = 0;
 
       bool operator>(const EventListener& other) const {
-        return this->priority > other.priority;
+        return this->priority < other.priority;
       }
       bool operator<(const EventListener& other) const {
-        return this->priority < other.priority;
+        return this->priority > other.priority;
       }
 
       EventListener() = default;
@@ -69,7 +69,57 @@ namespace Engine {
         }
         return false;
       }
+      bool empty() const {
+        return this->c.empty();
+      }
     };
+  class EventQueue: public std::queue<std::unique_ptr<Event>> {
+  public:
+    bool empty() const {
+      return this->std::queue<std::unique_ptr<Event>>::empty();
+    }
+    template <typename T>
+    bool contains() {
+      auto tag = typename T::Tag{};
+      return this->contains(tag);
+    }
+    bool contains(EventTag tag) {
+      for (const auto& event : this->c) {
+        if (event->tag == tag)
+          return true;
+      }
+      return false;
+    }
+
+    bool remove(EventTag tag) {
+      for (auto it = this->c.begin(); it != this->c.end(); ++it) {
+        if ((*it)->tag == tag) {
+          this->c.erase(it);
+          return true;
+        }
+      }
+      return false;
+    }
+    template <typename T>
+    bool remove() {
+      auto tag = typename T::Tag{};
+      return this->remove(tag);
+    }
+
+    auto find(EventTag tag) {
+      return std::find_if(this->c.begin(), this->c.end(), [&tag](const std::unique_ptr<Event>& event) {
+        return event->tag == tag;
+      });
+    }
+
+    bool remove(std::deque<std::unique_ptr<Event>>::iterator it) {
+      if (it != this->c.end()) {
+        this->c.erase(it);
+        return true;
+      }
+      return false;
+    }
+  };
   public:
     static EventSystem* Get() { return instance; }
     EventSystem();
@@ -120,10 +170,19 @@ namespace Engine {
       return true;
     }
 
+    // Queue an event and remove any other events of the same type
+    template <typename T, typename... Args>
+    bool queueUnique(Args&&... args) {
+      auto tag = typename T::Tag{};
+      auto it = this->eventQueue.find(tag);
+      this->eventQueue.remove(it);
+      return this->queue<T>(std::forward<Args>(args)...);
+    }
+
     uint32_t dispatchQueue();
   private:
     std::unordered_map<EventTag::ID, EventListenerQueue> listeners;
-    std::queue<std::unique_ptr<Event>> eventQueue;
+    EventQueue eventQueue;
     uint32_t listenerId = 0;
     static EventSystem* instance;
   };
