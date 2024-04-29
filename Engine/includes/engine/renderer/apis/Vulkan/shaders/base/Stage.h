@@ -18,6 +18,7 @@ namespace Engine::Renderers::Vulkan::Shaders {
     Stage() = delete;
     Stage(
       Device& device,
+      Base& shader,
       const std::vector<uint8_t>& code,
       StageType type
     );
@@ -40,6 +41,7 @@ namespace Engine::Renderers::Vulkan::Shaders {
     virtual void init(const std::vector<uint8_t>& code);
   protected:
     Device& device;
+    Base& shader;
     VkShaderModule handle;
     StageType type;
   };
@@ -48,6 +50,7 @@ namespace Engine::Renderers::Vulkan::Shaders {
   public:
     FileStage(
       Device& device,
+      Base& shader,
       StageType type,
       const std::string& filePath
     );
@@ -73,8 +76,14 @@ namespace Engine::Renderers::Vulkan::Shaders {
   public:
     BuiltinStage(
       Device& device,
+      Base& shader,
       StageType type,
       std::string_view id
+    );
+    BuiltinStage(
+      Device& device,
+      Base& shader,
+      StageType type
     );
     ~BuiltinStage() = default;
     BuiltinStage(const BuiltinStage&) = delete;

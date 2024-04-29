@@ -3,15 +3,15 @@ project "shaders"
   targetdir (ASSETS_TARGET_DIR)
   objdir (ASSETS_OBJ_DIR)
   files {
-    "**.vert.*",
-    "**.frag.*"
+    "**.vert",
+    "**.frag"
   }
-  filter { "files:**.vert.* or **.frag.*"}
-    buildmessage "Compiling %{file.relpath} to %{cfg.targetdir}/%{file.basename}%{file.extension}.spv"
+  filter { "files:**.vert or **.frag"}
+    buildmessage "Compiling %{file.relpath} to %{cfg.targetdir}/%{file.name:gsub('.glsl', '')}.spv"
     buildcommands {
       "{MKDIR} %[%{cfg.targetdir}]",
-      "glslc %[%{file.relpath}] -o %[%{cfg.targetdir}/%{file.basename}.spv]"
+      "glslc %[%{file.relpath}] -o %[%{cfg.targetdir}/%{file.name:gsub('.glsl', '')}.spv]"
     }
     buildoutputs {
-      "%{cfg.targetdir}/%{file.basename}.spv"
+      "%{cfg.targetdir}/%{file.name:gsub('.glsl', '')}.spv"
     }

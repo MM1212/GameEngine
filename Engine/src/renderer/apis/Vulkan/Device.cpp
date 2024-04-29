@@ -1,4 +1,6 @@
 #include <renderer/apis/Vulkan/Device.h>
+#include <renderer/apis/Vulkan/CommandBuffer.h>
+#include <renderer/apis/Vulkan/Fence.h>
 #include <core/EngineInfo.h>
 #include <renderer/logger.h>
 #include <vulkan/vulkan.h>
@@ -21,6 +23,8 @@ Device::Device(ApplicationInfo& appInfo, Window& window)
 }
 
 Device::~Device() {
+  LOG_RENDERER_TRACE("Destroying Vulkan device...");
+  vkDestroyCommandPool(this->logicalDevice, this->graphicsCommandPool, this->allocator);
   vkDestroyDevice(this->logicalDevice, this->allocator);
   vkDestroySurfaceKHR(this->instance, this->surface, this->allocator);
 #ifdef VK_ENABLE_DEBUG_MESSENGER
@@ -170,21 +174,21 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
   void* pUserData
 ) {
   switch (messageSeverity) {
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
-    LOG_RENDERER_TRACE("Validation Layer: {}", pCallbackData->pMessage);
-    break;
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
-    LOG_RENDERER_INFO("Validation Layer: {}", pCallbackData->pMessage);
-    break;
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
-    LOG_RENDERER_WARN("Validation Layer: {}", pCallbackData->pMessage);
-    break;
-  case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
-    LOG_RENDERER_ERROR("Validation Layer: {}", pCallbackData->pMessage);
-    break;
-  default:
-    LOG_RENDERER_CRITICAL("Validation Layer: {}", pCallbackData->pMessage);
-    break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+      LOG_RENDERER_TRACE("Validation Layer: {}", pCallbackData->pMessage);
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+      LOG_RENDERER_INFO("Validation Layer: {}", pCallbackData->pMessage);
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+      LOG_RENDERER_WARN("Validation Layer: {}", pCallbackData->pMessage);
+      break;
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+      LOG_RENDERER_ERROR("Validation Layer: {}", pCallbackData->pMessage);
+      break;
+    default:
+      LOG_RENDERER_CRITICAL("Validation Layer: {}", pCallbackData->pMessage);
+      break;
   }
   return VK_FALSE;
 }
@@ -370,24 +374,24 @@ void Device::pickPhysicalDevice() {
     VK_VERSION_PATCH(this->physicalDeviceInfo.properties.apiVersion)
   );
   switch (this->physicalDeviceInfo.properties.deviceType) {
-  case VK_PHYSICAL_DEVICE_TYPE_OTHER:
-    LOG_RENDERER_INFO("  - Device Type: Other");
-    break;
-  case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
-    LOG_RENDERER_INFO("  - Device Type: Integrated GPU");
-    break;
-  case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
-    LOG_RENDERER_INFO("  - Device Type: Discrete GPU");
-    break;
-  case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
-    LOG_RENDERER_INFO("  - Device Type: Virtual GPU");
-    break;
-  case VK_PHYSICAL_DEVICE_TYPE_CPU:
-    LOG_RENDERER_INFO("  - Device Type: CPU");
-    break;
-  default:
-    LOG_RENDERER_INFO("  - Device Type: Unknown");
-    break;
+    case VK_PHYSICAL_DEVICE_TYPE_OTHER:
+      LOG_RENDERER_INFO("  - Device Type: Other");
+      break;
+    case VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU:
+      LOG_RENDERER_INFO("  - Device Type: Integrated GPU");
+      break;
+    case VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU:
+      LOG_RENDERER_INFO("  - Device Type: Discrete GPU");
+      break;
+    case VK_PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU:
+      LOG_RENDERER_INFO("  - Device Type: Virtual GPU");
+      break;
+    case VK_PHYSICAL_DEVICE_TYPE_CPU:
+      LOG_RENDERER_INFO("  - Device Type: CPU");
+      break;
+    default:
+      LOG_RENDERER_INFO("  - Device Type: Unknown");
+      break;
   }
 
   for (uint32_t i = 0; i < this->physicalDeviceInfo.memory.memoryHeapCount; i++) {
@@ -496,4 +500,105 @@ void Device::createGraphicsCommandPool() {
     &this->graphicsCommandPool
   ));
   LOG_RENDERER_INFO("Graphics command pool created.");
+}
+
+void Device::createBuffer(
+  VkDeviceSize size,
+  VkBufferUsageFlags usage,
+  VkMemoryPropertyFlags properties,
+  VkBuffer& buffer,
+  VkDeviceMemory& bufferMemory,
+  bool bindOnCreation
+) {
+  VkBufferCreateInfo bufferInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+  bufferInfo.size = size;
+  bufferInfo.usage = usage;
+  bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+  VK_CHECK(vkCreateBuffer(this->logicalDevice, &bufferInfo, this->allocator, &buffer));
+
+  VkMemoryRequirements memRequirements;
+  vkGetBufferMemoryRequirements(this->logicalDevice, buffer, &memRequirements);
+
+  VkMemoryAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+  allocInfo.allocationSize = memRequirements.size;
+  allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+  VK_CHECK(vkAllocateMemory(this->logicalDevice, &allocInfo, this->allocator, &bufferMemory));
+  if (bindOnCreation)
+    vkBindBufferMemory(this->logicalDevice, buffer, bufferMemory, 0);
+}
+
+// CommandBuffer Device::beginSingleTimeCommands() {
+//   CommandBuffer cmdBuffer(*this, this->graphicsCommandPool, true);
+//   return std::move(cmdBuffer.beginRecording(true));
+// }
+
+// void Device::endSingleTimeCommands(
+//   CommandBuffer& cmdBuffer,
+//   CommandBuffer::SubmitInfo submitInfo
+// ) {
+//   cmdBuffer.endRecording().submit(this->getGraphicsQueue(), submitInfo);
+// }
+
+void Device::copyBuffer(
+  VkBuffer srcBuffer, VkBuffer dstBuffer,
+  VkDeviceSize size,
+  VkQueue queue, VkCommandPool pool, Fence* fence,
+  VkDeviceSize srcOffset, VkDeviceSize dstOffset
+) {
+  if (queue == VK_NULL_HANDLE)
+    queue = this->getGraphicsQueue();
+  if (pool == VK_NULL_HANDLE)
+    pool = this->graphicsCommandPool;
+  CommandBuffer::SubmitInfo submitInfo{};
+
+  if (fence != VK_NULL_HANDLE) {
+    submitInfo.fence = fence;
+    submitInfo.resetFence = true;
+  }
+
+  DiscardableCommandBuffer cmdBuffer(
+    *this,
+    pool,
+    queue,
+    submitInfo
+  );
+
+  VkBufferCopy copyRegion{};
+  copyRegion.srcOffset = srcOffset;
+  copyRegion.dstOffset = dstOffset;
+  copyRegion.size = size;
+  vkCmdCopyBuffer(cmdBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+}
+
+void Device::copyBufferToImage(
+  VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) {
+  DiscardableCommandBuffer commandBuffer(
+    *this,
+    this->graphicsCommandPool,
+    this->getGraphicsQueue()
+  );
+
+  VkBufferImageCopy region{};
+  region.bufferOffset = 0;
+  region.bufferRowLength = 0;
+  region.bufferImageHeight = 0;
+
+  region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  region.imageSubresource.mipLevel = 0;
+  region.imageSubresource.baseArrayLayer = 0;
+  region.imageSubresource.layerCount = layerCount;
+
+  region.imageOffset = { 0, 0, 0 };
+  region.imageExtent = { width, height, 1 };
+
+  vkCmdCopyBufferToImage(
+    commandBuffer,
+    buffer,
+    image,
+    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+    1,
+    &region
+  );
 }

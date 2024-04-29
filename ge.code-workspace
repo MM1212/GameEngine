@@ -6,6 +6,9 @@
   ],
   "settings": {
     "C_Cpp.formatting": "vcFormat",
+    "C_Cpp.vcFormat.indent.caseLabels": true,
+    "C_Cpp.vcFormat.indent.lambdaBracesWhenParameter": false,
+
     "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": true,
     "files.exclude": {
       "**/.git": true,
@@ -17,7 +20,7 @@
       "**/*.o": true,
       "**/*.d": true,
       // "**/*.vcxproj*": true,
-      "**/*.sln": true,
+      // "**/*.sln": true,
       "vendor/**/*": true
     },
     "files.associations": {

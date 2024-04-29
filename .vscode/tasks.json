@@ -121,7 +121,7 @@
     },
     {
       "label": "Build Editor (Debug)",
-      "dependsOn": "Rebuild Solution",
+      "dependsOn": ["Rebuild Solution", "Build Shaders"],
       "windows": {
         "command": "msbuild",
         "args": [
@@ -142,6 +142,32 @@
           "Editor"
         ],
         "problemMatcher": ["$gcc"]
+      },
+      "type": "shell",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "presentation": {
+        "reveal": "always"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Build Shaders",
+      "windows": {
+        "command": "msbuild",
+        "args": [
+          "assets/shaders/shaders.vcxproj",
+          "/p:Configuration=Debug",
+          "/p:Platform=x64",
+          "/verbosity:minimal",
+          "/nologo",
+          "/m"
+        ],
+        "problemMatcher": "$msCompile"
       },
       "type": "shell",
       "options": {

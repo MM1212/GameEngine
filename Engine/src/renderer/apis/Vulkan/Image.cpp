@@ -80,17 +80,17 @@ void Image::createView(const ImageViewCreateInfo& createViewInfo) {
   VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
   viewInfo.image = this->handle;
   switch (this->type) {
-  case VK_IMAGE_TYPE_1D:
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D;
-    break;
-  case VK_IMAGE_TYPE_2D:
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
-    break;
-  case VK_IMAGE_TYPE_3D:
-    viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
-    break;
-  default:
-    ASSERT(false, "Invalid image type");
+    case VK_IMAGE_TYPE_1D:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_1D;
+      break;
+    case VK_IMAGE_TYPE_2D:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+      break;
+    case VK_IMAGE_TYPE_3D:
+      viewInfo.viewType = VK_IMAGE_VIEW_TYPE_3D;
+      break;
+    default:
+      ASSERT(false, "Invalid image type");
   };
   viewInfo.format = createViewInfo.format != VK_FORMAT_UNDEFINED ? createViewInfo.format : this->format;
   viewInfo.subresourceRange = createViewInfo.subresourceRange;

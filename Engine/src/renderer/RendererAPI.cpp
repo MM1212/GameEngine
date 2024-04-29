@@ -21,16 +21,16 @@ std::unique_ptr<RendererAPI> RendererAPI::Create(ApplicationInfo& appInfo, Platf
   try {
     RendererAPI::Logger = Engine::Logger::GetMainLogger()->clone("Engine/Renderer");
     switch (api) {
-    case API::Vulkan:
-      return std::make_unique<Renderers::Vulkan::Renderer>(appInfo, platform);
-    case API::OpenGL:
-      LOG_RENDERER_CRITICAL("OpenGL is not supported yet!");
-      // return std::make_unique<OpenGLRenderer>(appInfo, platform);
-    case API::DirectX:
-      LOG_RENDERER_CRITICAL("DirectX is not supported yet!");
-      // return std::make_unique<DirectXRenderer>(appInfo, platform);
-    default:
-      return nullptr;
+      case API::Vulkan:
+        return std::make_unique<Renderers::Vulkan::Renderer>(appInfo, platform);
+      case API::OpenGL:
+        LOG_RENDERER_CRITICAL("OpenGL is not supported yet!");
+        // return std::make_unique<OpenGLRenderer>(appInfo, platform);
+      case API::DirectX:
+        LOG_RENDERER_CRITICAL("DirectX is not supported yet!");
+        // return std::make_unique<DirectXRenderer>(appInfo, platform);
+      default:
+        return nullptr;
     }
   }
   catch (const std::exception& e) {

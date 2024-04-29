@@ -6,7 +6,7 @@ using Engine::Renderers::Vulkan::Renderer;
 
 Renderer::Renderer(ApplicationInfo& appInfo, Platform& platform)
   : RendererAPI(appInfo, platform, RendererAPI::API::Vulkan),
-  device(appInfo, *platform.window), objectShader(this->device) {
+  device(appInfo, *platform.window) {
   this->init();
 }
 
@@ -17,13 +17,15 @@ Renderer::~Renderer() {
   this->inFlightFences.clear();
   this->graphicsCommandBuffers.clear();
   this->swapchain.reset();
-  vkDestroyCommandPool(this->device, this->device.getGraphicsCommandPool(), this->device.getAllocator());
 }
 
 void Renderer::init() {
   this->recreateSwapchain();
   this->createGraphicsCommandBuffers();
   this->createSyncObjects();
+  this->objectShader = MakeScope<Shaders::Object>(this->device, this->getMainRenderPass());
+  this->createObjectBuffers();
+  this->uploadTestObjectData();
 }
 
 bool Renderer::beginFrame() {
@@ -67,10 +69,19 @@ bool Renderer::beginFrame() {
   vkCmdSetViewport(cmdBuffer, 0, 1, &viewport);
   vkCmdSetScissor(cmdBuffer, 0, 1, &scissor);
 
-  this->swapchain->getMainRenderPass().begin(
+  this->getMainRenderPass().begin(
     cmdBuffer,
     this->swapchain->getFramebuffer(this->currentImageIndex)
   );
+
+  // TODO: tmp code
+  this->objectShader->use(cmdBuffer);
+  VkBuffer vertexBuffers[] = { this->objectVertexBuffer->getHandle() };
+  VkDeviceSize offsets[] = { 0 };
+  vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
+  vkCmdBindIndexBuffer(cmdBuffer, this->objectIndexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
+
+  vkCmdDrawIndexed(cmdBuffer, 6, 1, 0, 0, 0);
 
   return true;
 }
@@ -181,4 +192,74 @@ void Renderer::createSyncObjects() {
     this->renderFinishedSemaphores.emplace_back(this->device);
     this->inFlightFences.emplace_back(this->device, true);
   }
+}
+
+void Renderer::createObjectBuffers() {
+  this->objectVertexBuffer = MakeScope<MemBuffer>(
+    this->device,
+    sizeof(Shaders::Object::Vertex),
+    1024 * 1024,
+    VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+  );
+  this->objectIndexBuffer = MakeScope<MemBuffer>(
+    this->device,
+    sizeof(uint32_t),
+    1024 * 1024,
+    VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+    VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+  );
+}
+
+void Renderer::uploadDataToBuffer(
+  MemBuffer& buffer,
+  VkQueue queue, VkCommandPool cmdPool, Fence* fence,
+  const void* data, size_t size, uint64_t offset
+) {
+  MemBuffer stagingBuffer(
+    this->device,
+    size,
+    1,
+    VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+    VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+  );
+  stagingBuffer.map();
+  stagingBuffer.writeTo(data, size);
+  stagingBuffer.unmap();
+  this->device.copyBuffer(
+    stagingBuffer, buffer,
+    size,
+    queue, cmdPool, fence,
+    0, offset
+  );
+}
+
+void Renderer::uploadTestObjectData() {
+  std::vector<Shaders::Object::Vertex> vertices = {
+    {{0.f, -.5f, 0.f}},
+    {{.5, .5f, 0.f}},
+    {{0.f, .5f, 0.f}},
+    {{.5f, -.5f, 0.f}}
+  };
+  std::vector<uint32_t> indices = { 0, 1, 2, 0, 3, 1 };
+  this->uploadDataToBuffer(
+    *this->objectVertexBuffer,
+    this->device.getGraphicsQueue(),
+    this->device.getGraphicsCommandPool(),
+    nullptr,
+    vertices.data(),
+    vertices.size() * sizeof(Shaders::Object::Vertex),
+    this->objectVertexOffset
+  );
+  this->objectVertexOffset += vertices.size() * sizeof(Shaders::Object::Vertex);
+  this->uploadDataToBuffer(
+    *this->objectIndexBuffer,
+    this->device.getGraphicsQueue(),
+    this->device.getGraphicsCommandPool(),
+    nullptr,
+    indices.data(),
+    indices.size() * sizeof(uint32_t),
+    this->objectIndexOffset
+  );
+  this->objectIndexOffset += indices.size() * sizeof(uint32_t);
 }

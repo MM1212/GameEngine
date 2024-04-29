@@ -3,7 +3,7 @@
 #include "renderer/apis/Vulkan/defines.h"
 #include "renderer/apis/Vulkan/Device.h"
 #include "renderer/apis/Vulkan/CommandBuffer.h"
-#include "base/Pipeline.h"
+#include "renderer/apis/Vulkan/Pipeline.h"
 #include "base/Stage.h"
 
 #include <string_view>
@@ -14,13 +14,15 @@ namespace Engine::Renderers::Vulkan::Shaders {
 
   class Base {
   public:
-    Base(Device& device, const Pipeline::ConfigInfo& pipelineConfigInfo);
-    virtual ~Base() = default;
+    Base(Device& device, const std::string& name);
+    Base(Device& device, std::string_view name);
+    virtual ~Base();
 
     Base(const Base&) = delete;
     Base& operator=(const Base&) = delete;
 
-    void use();
+    virtual void use(CommandBuffer& cmdBuffer) = 0;
+    std::string_view getName() const { return this->name; }
     const Ref<Stage> getStage(StageType type) const {
       auto it = std::find_if(
         this->stages.begin(),
@@ -34,17 +36,20 @@ namespace Engine::Renderers::Vulkan::Shaders {
       return *it;
     }
     template <typename T, typename ...Args>
-    void addStage(Args&&... args) {
-      this->stages.push_back(MakeRef<T>(this->device, std::forward<Args>(args)...));
+    Ref<T> addStage(Args&&... args) {
+      Ref<T> stage = MakeRef<T>(this->device, *this, std::forward<Args>(args)...);
+      this->stages.push_back(stage);
+      return stage;
     }
     static std::vector<uint8_t> ReadFile(const std::string_view filePath);
   protected:
-    virtual void init() = 0;
+    virtual void init(const Pipeline::ConfigInfo& pipelineConfigInfo);
     friend class Pipeline;
     friend class Stage;
   protected:
     Device& device;
     std::vector<Ref<Stage>> stages;
-    // Pipeline pipeline;
+    std::string name;
+    Scope<Pipeline> pipeline = nullptr;
   };
 };

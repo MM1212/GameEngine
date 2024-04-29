@@ -1,8 +1,8 @@
 #pragma once
 
-#include "renderer/apis/Vulkan/defines.h"
-#include "renderer/apis/Vulkan/Device.h"
-#include "renderer/apis/Vulkan/CommandBuffer.h"
+#include "defines.h"
+#include "Device.h"
+#include "CommandBuffer.h"
 
 #include <vector>
 
@@ -16,6 +16,7 @@ namespace Engine::Renderers::Vulkan::Shaders {
     PipelineConfigInfo(PipelineConfigInfo&& other) = default;
     PipelineConfigInfo& operator=(PipelineConfigInfo&& other) = default;
 
+    std::vector<VkPipelineShaderStageCreateInfo> stages;
     std::vector<VkVertexInputBindingDescription> bindingDescriptions;
     std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
     VkPipelineViewportStateCreateInfo viewportInfo;
@@ -28,31 +29,41 @@ namespace Engine::Renderers::Vulkan::Shaders {
     std::vector<VkDynamicState> dynamicStateEnables;
     VkPipelineDynamicStateCreateInfo dynamicStateInfo;
     VkPipelineLayout pipelineLayout = nullptr;
-    VkRenderPass renderPass = nullptr;
     uint32_t subpass = 0;
+
+    // create pipeline layout data
+    VkRenderPass renderPass = nullptr;
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+    std::vector<VkPushConstantRange> pushConstantRanges;
+
+    PipelineConfigInfo& enableAlphaBlending();
+    PipelineConfigInfo& enableWireframe();
+    PipelineConfigInfo& enableRasterizationCulling(VkCullModeFlagBits mode = VK_CULL_MODE_BACK_BIT, VkFrontFace face = VK_FRONT_FACE_COUNTER_CLOCKWISE);
   };
   class Pipeline {
   public:
     using ConfigInfo = PipelineConfigInfo;
     Pipeline(
       Device& device,
-      Base& shader,
       const ConfigInfo& configInfo
     );
     ~Pipeline();
     Pipeline(const Pipeline&) = delete;
     Pipeline& operator=(const Pipeline&) = delete;
 
-    void bind(CommandBuffer& cmdBuffer);
+    void bind(CommandBuffer& cmdBuffer, VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
     static void SetupDefaultConfigInfo(ConfigInfo& configInfo);
-    static void EnableAlphaBlending(ConfigInfo& configInfo);
   private:
+    void init(ConfigInfo& configInfo);
+    void createLayout(
+      const ConfigInfo& configInfo
+    );
     void createGraphicsPipeline(
       const ConfigInfo& configInfo
     );
 
     Device& device;
-    Base& shader;
     VkPipeline handle = VK_NULL_HANDLE;
+    VkPipelineLayout layout = VK_NULL_HANDLE;
   };
 };

@@ -20,8 +20,11 @@ namespace Engine {
     if (!spec.workingDirectory.empty()) {
       std::filesystem::current_path(spec.workingDirectory);
     }
-    // else
-    //   std::filesystem::current_path(spec.args[0]);
+    else {
+      std::filesystem::path exeFolderPath = std::filesystem::absolute(std::filesystem::path(spec.args[0])).parent_path();
+      std::filesystem::path binPath = exeFolderPath.parent_path();
+      std::filesystem::current_path(binPath);
+    }
     this->eventSystem.on<WindowCloseEvent>([this](WindowCloseEvent& ev) {
       this->running = false;
       return true;

@@ -2,15 +2,16 @@
 
 #include <renderer/logger.h>
 
-#include <sstream>
+#include <format>
 
 namespace Engine::Renderers::Vulkan::Shaders {
 
   Stage::Stage(
     Device& device,
+    Base& shader,
     const std::vector<uint8_t>& code,
     StageType type
-  ) : device(device), type(type) {
+  ) : device(device), shader(shader), type(type) {
     this->init(code);
   }
 
@@ -32,16 +33,16 @@ namespace Engine::Renderers::Vulkan::Shaders {
 
   std::string_view Stage::GetExtension(StageType type) {
     switch (type) {
-    case StageType::Vertex: return "vert";
-    case StageType::Fragment: return "frag";
+      case StageType::Vertex: return "vert";
+      case StageType::Fragment: return "frag";
     }
     return "";
   }
 
   VkShaderStageFlagBits Stage::GetVkFlags(StageType type) {
     switch (type) {
-    case StageType::Vertex: return VK_SHADER_STAGE_VERTEX_BIT;
-    case StageType::Fragment: return VK_SHADER_STAGE_FRAGMENT_BIT;
+      case StageType::Vertex: return VK_SHADER_STAGE_VERTEX_BIT;
+      case StageType::Fragment: return VK_SHADER_STAGE_FRAGMENT_BIT;
     }
     return VK_SHADER_STAGE_FLAG_BITS_MAX_ENUM;
   }
@@ -54,16 +55,15 @@ namespace Engine::Renderers::Vulkan::Shaders {
   }
 
   std::string FileStage::ConstructFilePath(StageType type, const std::string& path) {
-    std::stringstream ss;
-    ss << path << "." << GetExtension(type) << ".spv";
-    return ss.str();
+    return std::format("{}.{}.spv", path, GetExtension(type));
   }
 
   FileStage::FileStage(
     Device& device,
+    Base& shader,
     StageType type,
     const std::string& filePath
-  ) : Stage(device, Base::ReadFile(ConstructFilePath(type, filePath)), type), filePath(filePath) {
+  ) : Stage(device, shader, Base::ReadFile(ConstructFilePath(type, filePath)), type), filePath(filePath) {
     LOG_RENDERER_INFO("Shader stage {} loaded from {}", GetExtension(type), filePath);
   }
 
@@ -75,7 +75,14 @@ namespace Engine::Renderers::Vulkan::Shaders {
 
   BuiltinStage::BuiltinStage(
     Device& device,
+    Base& shader,
     StageType type,
     std::string_view id
-  ) : FileStage(device, type, ConstructId(type, id)) {}
+  ) : FileStage(device, shader, type, ConstructId(type, id)) {}
+
+  BuiltinStage::BuiltinStage(
+    Device& device,
+    Base& shader,
+    StageType type
+  ) : FileStage(device, shader, type, ConstructId(type, shader.getName())) {}
 }

@@ -26,6 +26,8 @@ namespace Engine::Renderers::Vulkan {
   class CommandBuffer {
   public:
     using State = CommandBufferState;
+    using SubmitInfo = CommandBufferSubmitInfo;
+
     CommandBuffer(Device& device, VkCommandPool pool, bool isPrimary = true);
     CommandBuffer(Device& device, VkCommandPool pool, VkCommandBuffer handle, VkCommandBufferLevel level);
     
@@ -90,6 +92,8 @@ namespace Engine::Renderers::Vulkan {
     );
     ~DiscardableCommandBuffer();
     DiscardableCommandBuffer& endRecording() override;
+
+    operator VkCommandBuffer() const { return this->handle; }
   private:
     VkQueue submitQueue;
     CommandBufferSubmitInfo submitInfo;

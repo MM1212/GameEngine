@@ -1,23 +1,39 @@
-#include "renderer/apis/Vulkan/shaders/defines.h"
+#include "renderer/apis/Vulkan/Pipeline.h"
 
 #include <utils/asserts.h>
+#include <renderer/logger.h>
 
 #include <fstream>
 #include <stdexcept>
-#include <cassert>
+#include <format>
 
 using namespace Engine::Renderers::Vulkan::Shaders;
 
 Pipeline::Pipeline(
   Device& device,
-  Base& shader,
   const ConfigInfo& configInfo
-) : device{ device }, shader{ shader } {
-  this->createGraphicsPipeline(configInfo);
+) : device{ device } {
+  this->init(const_cast<ConfigInfo&>(configInfo));
 }
 
 Pipeline::~Pipeline() {
-  vkDestroyPipeline(this->device.getHandle(), this->handle, nullptr);
+  vkDestroyPipelineLayout(this->device.getHandle(), this->layout, this->device.getAllocator());
+  vkDestroyPipeline(this->device.getHandle(), this->handle, this->device.getAllocator());
+}
+
+void Pipeline::createLayout(const ConfigInfo& configInfo) {
+  VkPipelineLayoutCreateInfo pipelineLayoutInfo = { VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO };
+  pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(configInfo.descriptorSetLayouts.size());
+  pipelineLayoutInfo.pSetLayouts = configInfo.descriptorSetLayouts.data();
+  pipelineLayoutInfo.pushConstantRangeCount = static_cast<uint32_t>(configInfo.pushConstantRanges.size());
+  pipelineLayoutInfo.pPushConstantRanges = configInfo.pushConstantRanges.data();
+
+  VK_CHECK(vkCreatePipelineLayout(
+    this->device.getHandle(),
+    &pipelineLayoutInfo,
+    this->device.getAllocator(),
+    &this->layout
+  ));
 }
 
 void Pipeline::createGraphicsPipeline(
@@ -25,16 +41,6 @@ void Pipeline::createGraphicsPipeline(
 ) {
   ASSERT(configInfo.pipelineLayout != VK_NULL_HANDLE, "pipeline layout is null");
   ASSERT(configInfo.renderPass != VK_NULL_HANDLE, "render pass is null");
-
-  auto vertShaderStage = this->shader.getStage(StageType::Vertex);
-  auto fragShaderStage = this->shader.getStage(StageType::Fragment);
-  ASSERT(vertShaderStage != nullptr, "vertex shader is null");
-  ASSERT(fragShaderStage != nullptr, "fragment shader is null");
-
-  VkPipelineShaderStageCreateInfo shaderStages[2] = {
-    vertShaderStage->getPipelineShaderStageCreateInfo(),
-    fragShaderStage->getPipelineShaderStageCreateInfo()
-  };
 
   VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
   vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -45,8 +51,8 @@ void Pipeline::createGraphicsPipeline(
 
   VkGraphicsPipelineCreateInfo pipelineInfo{};
   pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-  pipelineInfo.stageCount = 2;
-  pipelineInfo.pStages = shaderStages;
+  pipelineInfo.stageCount = static_cast<uint32_t>(configInfo.stages.size());
+  pipelineInfo.pStages = configInfo.stages.data();
   pipelineInfo.pVertexInputState = &vertexInputInfo;
   pipelineInfo.pInputAssemblyState = &configInfo.inputAssemblyInfo;
   pipelineInfo.pViewportState = &configInfo.viewportInfo;
@@ -61,14 +67,25 @@ void Pipeline::createGraphicsPipeline(
   pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
   pipelineInfo.basePipelineIndex = -1;
 
-  if (vkCreateGraphicsPipelines(
+  VkResult result = vkCreateGraphicsPipelines(
     this->device.getHandle(),
-    VK_NULL_HANDLE, 1,
-    &pipelineInfo, nullptr,
+    VK_NULL_HANDLE,
+    1,
+    &pipelineInfo,
+    this->device.getAllocator(),
     &this->handle
-  ) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create graphics pipeline");
+  );
+  if (IsCallResultSuccess(result)) {
+    LOG_RENDERER_INFO("Created graphics pipeline");
+    return;
   }
+  throw std::runtime_error(std::format("Failed to create graphics pipeline - {}", CallResultToString(result, true)));
+}
+
+void Pipeline::init(ConfigInfo& configInfo) {
+  this->createLayout(configInfo);
+  configInfo.pipelineLayout = this->layout;
+  this->createGraphicsPipeline(configInfo);
 }
 
 void Pipeline::SetupDefaultConfigInfo(Pipeline::ConfigInfo& configInfo) {
@@ -105,12 +122,12 @@ void Pipeline::SetupDefaultConfigInfo(Pipeline::ConfigInfo& configInfo) {
   configInfo.colorBlendAttachment.colorWriteMask =
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
     VK_COLOR_COMPONENT_A_BIT;
-  configInfo.colorBlendAttachment.blendEnable = VK_FALSE;
-  configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-  configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+  configInfo.colorBlendAttachment.blendEnable = VK_TRUE;
+  configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+  configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-  configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-  configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+  configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+  configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
   configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
   configInfo.colorBlendingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -134,7 +151,7 @@ void Pipeline::SetupDefaultConfigInfo(Pipeline::ConfigInfo& configInfo) {
   configInfo.depthStencilInfo.front = {};
   configInfo.depthStencilInfo.back = {};
 
-  configInfo.dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
+  configInfo.dynamicStateEnables = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, VK_DYNAMIC_STATE_LINE_WIDTH };
   configInfo.dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
   configInfo.dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(configInfo.dynamicStateEnables.size());
   configInfo.dynamicStateInfo.pDynamicStates = configInfo.dynamicStateEnables.data();
@@ -145,19 +162,31 @@ void Pipeline::SetupDefaultConfigInfo(Pipeline::ConfigInfo& configInfo) {
   // configInfo.attributeDescriptions = Model::Vertex::GetAttributeDescriptions();
 }
 
-void Pipeline::EnableAlphaBlending(Pipeline::ConfigInfo& configInfo) {
-  configInfo.colorBlendAttachment.colorWriteMask =
+PipelineConfigInfo& PipelineConfigInfo::enableAlphaBlending() {
+  this->colorBlendAttachment.colorWriteMask =
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT |
     VK_COLOR_COMPONENT_A_BIT;
-  configInfo.colorBlendAttachment.blendEnable = VK_TRUE;
-  configInfo.colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-  configInfo.colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-  configInfo.colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-  configInfo.colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-  configInfo.colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-  configInfo.colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+  this->colorBlendAttachment.blendEnable = VK_TRUE;
+  this->colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+  this->colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+  this->colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+  this->colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+  this->colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+  this->colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+  return *this;
 }
 
-void Pipeline::bind(CommandBuffer& cmdBuffer) {
-  vkCmdBindPipeline(cmdBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->handle);
+PipelineConfigInfo& PipelineConfigInfo::enableWireframe() {
+  this->rasterizerInfo.polygonMode = VK_POLYGON_MODE_LINE;
+  return *this;
+}
+
+PipelineConfigInfo& PipelineConfigInfo::enableRasterizationCulling(VkCullModeFlagBits mode, VkFrontFace face) {
+  this->rasterizerInfo.cullMode = mode;
+  this->rasterizerInfo.frontFace = face;
+  return *this;
+}
+
+void Pipeline::bind(CommandBuffer& cmdBuffer, VkPipelineBindPoint bindPoint) {
+  vkCmdBindPipeline(cmdBuffer, bindPoint, this->handle);
 }

@@ -1,9 +1,7 @@
-print(Vendors.ImGui.shared.include)
-
 project "Engine"
   kind "StaticLib"
   language "C++"
-  cppdialect "C++17"
+  cppdialect "C++20"
   staticruntime "off"
 
   targetdir (PROJECT_TARGET_DIR)
@@ -12,8 +10,6 @@ project "Engine"
   files {
     "includes/**.h",
     "src/**.cpp",
-    "../assets/shaders/**.vert",
-    "../assets/shaders/**.frag",
     "%{Vendors.ImGuizmo:getPath()}/ImGuizmo.cpp"
   }
 
@@ -41,6 +37,8 @@ project "Engine"
     "yaml-cpp",
     "spdlog"
   }
+
+  dependson {'assets', 'shaders'}
 
   filter "system:windows"
     defines { '_WIN32' }

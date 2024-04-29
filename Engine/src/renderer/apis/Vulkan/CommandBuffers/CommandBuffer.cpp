@@ -27,17 +27,17 @@ CommandBuffer::~CommandBuffer() {
 
 void CommandBuffer::free() {
   switch (this->state) {
-  case State::NotAllocated:
-    return;
-  case State::Recording:
-  case State::InRenderPass:
-    this->endRecording();
-    break;
-  case State::Submitted:
-    this->device.waitIdle();
-    break;
-  default:
-    break;
+    case State::NotAllocated:
+      return;
+    case State::Recording:
+    case State::InRenderPass:
+      this->endRecording();
+      break;
+    case State::Submitted:
+      this->device.waitIdle();
+      break;
+    default:
+      break;
   }
   vkFreeCommandBuffers(this->device, this->pool, 1, &this->handle);
   this->state = State::NotAllocated;
@@ -99,7 +99,7 @@ void CommandBuffer::submit(VkQueue queue, CommandBufferSubmitInfo info) {
 
   if (info.resetFence && info.fence)
     info.fence->reset();
-  VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, *info.fence));
+  VK_CHECK(vkQueueSubmit(queue, 1, &submitInfo, info.fence ? *info.fence : VK_NULL_HANDLE));
   if (!info.fence)
     VK_CHECK(vkQueueWaitIdle(queue));
   this->setAsSubmitted();

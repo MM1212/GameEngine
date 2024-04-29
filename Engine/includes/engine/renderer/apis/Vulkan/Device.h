@@ -50,6 +50,8 @@ namespace Engine::Renderers::Vulkan {
     VkQueue transfer = VK_NULL_HANDLE;
   };
 
+  class Fence;
+
   class Device {
   public:
     Device(ApplicationInfo& appInfo, Window& window);
@@ -81,6 +83,33 @@ namespace Engine::Renderers::Vulkan {
     VkResult waitIdle() const { return vkDeviceWaitIdle(this->logicalDevice); }
     VkFormat findSupportedFormat(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features) const;
     uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) const;
+
+    // Buffer Helper Functions
+    void createBuffer(
+      VkDeviceSize size,
+      VkBufferUsageFlags usage,
+      VkMemoryPropertyFlags properties,
+      VkBuffer& buffer,
+      VkDeviceMemory& bufferMemory,
+      bool bindToBuffer = true
+    );
+    void copyBuffer(
+      VkBuffer srcBuffer,
+      VkBuffer dstBuffer,
+      VkDeviceSize size,
+      VkQueue queue = VK_NULL_HANDLE,
+      VkCommandPool pool = VK_NULL_HANDLE,
+      Fence* fence = nullptr,
+      VkDeviceSize srcOffset = 0,
+      VkDeviceSize dstOffset = 0
+    );
+    void copyBufferToImage(
+      VkBuffer buffer,
+      VkImage image,
+      uint32_t width,
+      uint32_t height,
+      uint32_t layerCount
+    );
   private:
     void createInstance();
 #if VK_ENABLE_DEBUG_MESSENGER
@@ -99,7 +128,7 @@ namespace Engine::Renderers::Vulkan {
     bool isDeviceSuitable(VkPhysicalDevice device, const PhysicalDeviceRequirements& requirements, PhysicalDeviceInfo& properties) const;
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) const;
     SwapChainSupportDetails querySwapChainSupportForDevice(VkPhysicalDevice device) const;
-    bool Device::checkDeviceExtensionSupport(VkPhysicalDevice device, const PhysicalDeviceRequirements& requirements) const;
+    bool checkDeviceExtensionSupport(VkPhysicalDevice device, const PhysicalDeviceRequirements& requirements) const;
   private:
     ApplicationInfo& appInfo;
     Window& window;

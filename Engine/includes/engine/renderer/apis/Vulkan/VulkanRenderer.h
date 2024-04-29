@@ -9,6 +9,7 @@
 #include "Framebuffer.h"
 #include "Fence.h"
 #include "Semaphore.h"
+#include "MemBuffer.h"
 
 #include "shaders/Object.h"
 
@@ -32,6 +33,7 @@ namespace Engine::Renderers::Vulkan {
 
     Device& getDevice() { return this->device; }
     Swapchain& getSwapchain() const { return *this->swapchain; }
+    RenderPass& getMainRenderPass() const { return this->swapchain->getMainRenderPass(); }
     CommandBuffer& getCurrentGraphicsCommandBuffer() { return this->graphicsCommandBuffers[this->currentImageIndex]; }
   private:
     VkExtent2D getWindowExtent() const {
@@ -41,6 +43,15 @@ namespace Engine::Renderers::Vulkan {
     bool recreateSwapchain();
     void createGraphicsCommandBuffers();
     void createSyncObjects();
+    void createObjectBuffers();
+    void uploadTestObjectData();
+
+    // temp
+    void uploadDataToBuffer(
+      MemBuffer& buffer,
+      VkQueue queue, VkCommandPool cmdPool, Fence* fence,
+      const void* data, size_t size, uint64_t offset = 0
+    );
 
   private:
     Vulkan::Device device;
@@ -54,7 +65,12 @@ namespace Engine::Renderers::Vulkan {
     std::vector<Fence> inFlightFences;
     std::vector<Fence*> imagesInFlightFences;
 
-    Shaders::Object objectShader;
+    Scope<Shaders::Object> objectShader = nullptr;
+    Scope<MemBuffer> objectVertexBuffer = nullptr;
+    Scope<MemBuffer> objectIndexBuffer = nullptr;
+    uint64_t objectVertexOffset = 0;
+    uint64_t objectIndexOffset = 0;
+
 
     uint32_t currentImageIndex = 0;
     uint32_t currentFrameIndex = 0;
