@@ -54,7 +54,7 @@ namespace Engine {
     ApplicationInfo spec;
     EventSystem eventSystem;
     Platform platform;
-    std::unique_ptr<RendererAPI> renderer;
+    std::unique_ptr<Renderer> renderer;
     bool running = false;
     bool suspended = false;
   private:

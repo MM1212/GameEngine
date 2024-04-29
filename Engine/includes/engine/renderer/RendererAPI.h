@@ -7,7 +7,14 @@
 
 namespace Engine {
   struct ApplicationInfo;
-  class RendererAPI {
+
+  struct GlobalUboObject {
+    glm::mat4 view;
+    glm::mat4 projection;
+    glm::mat4 viewProjection;
+  };
+
+  class Renderer {
   public:
     enum class API : uint8_t {
       None = 0,
@@ -31,20 +38,20 @@ namespace Engine {
     }
     static constexpr API DEFAULT_API = API::Vulkan;
 
-    RendererAPI() = delete;
-    RendererAPI(ApplicationInfo& appInfo, Platform& platform, API api);
-    RendererAPI(const RendererAPI&) = delete;
-    RendererAPI(RendererAPI&&) = delete;
-    RendererAPI& operator=(const RendererAPI&) = delete;
+    Renderer() = delete;
+    Renderer(ApplicationInfo& appInfo, Platform& platform, API api);
+    Renderer(const Renderer&) = delete;
+    Renderer(Renderer&&) = delete;
+    Renderer& operator=(const Renderer&) = delete;
 
-    virtual ~RendererAPI() = default;
+    virtual ~Renderer() = default;
     virtual bool beginFrame() = 0;
     virtual bool endFrame() = 0;
     // Can be manually called to resize the frame buffer but will also be called by event system when window is resized
     virtual void onResize(uint32_t width, uint32_t height) = 0;
 
     static std::shared_ptr<spdlog::logger>& GetLogger() { return Logger; }
-    static std::unique_ptr<RendererAPI> Create(ApplicationInfo& appInfo, Platform& platform, API api = DEFAULT_API);
+    static std::unique_ptr<Renderer> Create(ApplicationInfo& appInfo, Platform& platform, API api = DEFAULT_API);
   protected:
     static std::shared_ptr<spdlog::logger> Logger;
     ApplicationInfo& appInfo;

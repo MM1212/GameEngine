@@ -1,5 +1,6 @@
 #pragma once
 
+#include "renderer/RendererAPI.h"
 #include "renderer/apis/Vulkan/defines.h"
 #include "renderer/apis/Vulkan/Device.h"
 #include "renderer/apis/Vulkan/CommandBuffer.h"

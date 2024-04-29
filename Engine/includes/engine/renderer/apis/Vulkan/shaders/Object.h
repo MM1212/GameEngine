@@ -23,9 +23,11 @@ namespace Engine::Renderers::Vulkan::Shaders {
     Object& operator=(const Object&) = delete;
 
     void use(CommandBuffer& cmdBuffer) override;
+    const GlobalUboObject& getUbo() const { return this->ubo; }
   private:
     void init();
   private:
     RenderPass& renderPass;
+    GlobalUboObject ubo;
   };
 };

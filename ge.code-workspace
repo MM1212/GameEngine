@@ -19,8 +19,8 @@
       "**/Thumbs.db": true,
       "**/*.o": true,
       "**/*.d": true,
-      // "**/*.vcxproj*": true,
-      // "**/*.sln": true,
+      "**/*.vcxproj*": true,
+      "**/*.sln": true,
       "vendor/**/*": true
     },
     "files.associations": {

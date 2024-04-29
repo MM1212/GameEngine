@@ -5,7 +5,7 @@
 using Engine::Renderers::Vulkan::Renderer;
 
 Renderer::Renderer(ApplicationInfo& appInfo, Platform& platform)
-  : RendererAPI(appInfo, platform, RendererAPI::API::Vulkan),
+  : Engine::Renderer(appInfo, platform, Renderer::API::Vulkan),
   device(appInfo, *platform.window) {
   this->init();
 }

@@ -18,7 +18,7 @@
 #include <memory>
 
 namespace Engine::Renderers::Vulkan {
-  class Renderer : public RendererAPI {
+  class Renderer : public Engine::Renderer {
   public:
     Renderer() = delete;
     Renderer(ApplicationInfo& appInfo, Platform& platform);
