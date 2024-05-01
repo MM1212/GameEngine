@@ -18,7 +18,7 @@
         "cwd": "${workspaceFolder}/bin/Debug-windows-x86_64",
         "program": "${workspaceFolder}/bin/Debug-windows-x86_64/Editor/Editor.exe",
         "type": "cppvsdbg",
-        "console": "externalTerminal"
+        "externalConsole": false
       },
       "preLaunchTask": "Build Editor (Debug)",
       "presentation": {

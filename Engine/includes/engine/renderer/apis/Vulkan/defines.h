@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.h>
 #include <utils/logger.h>
+#include <utils/memory.h>
+#include <renderer/FrameInfo.h>
 #include "utils.h"
 
 #ifdef _DEBUG
@@ -18,6 +20,15 @@
 #endif
 
 namespace Engine::Renderers::Vulkan {
+  class CommandBuffer;
+
+  struct VkFrameInfo {
+    FrameInfo& shared;
+
+    uint32_t frameIndex;
+    CommandBuffer& cmdBuffer;
+    VkDescriptorSet globalDescriptorSet;
+  };
   void DestroyDebugUtilsMessengerEXT(
     VkInstance instance,
     VkDebugUtilsMessengerEXT debugMessenger,

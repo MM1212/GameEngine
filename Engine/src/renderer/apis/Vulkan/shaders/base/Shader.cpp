@@ -1,4 +1,5 @@
 #include "renderer/apis/Vulkan/shaders/defines.h"
+#include "renderer/apis/Vulkan/VulkanRenderer.h"
 
 #include <renderer/logger.h>
 
@@ -20,11 +21,11 @@ std::vector<uint8_t> Base::ReadFile(const std::string_view filePath) {
   return buffer;
 }
 
-Base::Base(Device& device, const std::string& name)
-  : device(device), name(name) {}
+Base::Base(Renderer& ctx, const std::string& name)
+  : ctx(ctx), name(name) {}
 
-Base::Base(Device& device, std::string_view name)
-  : device(device), name(name) {}
+Base::Base(Renderer& ctx, std::string_view name)
+  : ctx(ctx), name(name) {}
 
 Base::~Base() {
   LOG_RENDERER_INFO("Destroyed shader {}", this->name);
@@ -32,6 +33,6 @@ Base::~Base() {
 
 // needs to be called after all stages are added
 void Base::init(const PipelineConfigInfo& pipelineConfigInfo) {
-  this->pipeline = MakeScope<Pipeline>(this->device, pipelineConfigInfo);
+  this->pipeline = MakeScope<Pipeline>(this->ctx.getDevice(), pipelineConfigInfo);
   LOG_RENDERER_INFO("Created shader {}", this->name);
 }

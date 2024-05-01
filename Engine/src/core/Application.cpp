@@ -60,8 +60,14 @@ namespace Engine {
   void Application::onUpdate(DeltaTime dt) {
     this->layersManager.onUpdate(dt);
   }
-  void Application::onRender(DeltaTime dt) {
-    this->layersManager.onRender(dt);
+  void Application::onRender(FrameInfo& frameInfo) {
+    this->layersManager.onRender(frameInfo);
+  }
+  void Application::onBeginFrame(FrameInfo& frameInfo) {
+    this->layersManager.onBeginFrame(frameInfo);
+  }
+  void Application::onEndFrame(FrameInfo& frameInfo) {
+    this->layersManager.onEndFrame(frameInfo);
   }
 
   void Application::run() {
@@ -78,11 +84,20 @@ namespace Engine {
       auto now = std::chrono::high_resolution_clock::now();
       DeltaTime dt = std::chrono::duration<float, std::chrono::seconds::period>(now - lastTime).count();
       lastTime = now;
+      // script updates
       this->onUpdate(dt);
-      if (!this->renderer->beginFrame())
+      FrameInfo frameInfo{
+        dt
+      };
+      // frame prep
+      this->onBeginFrame(frameInfo);
+      if (!this->renderer->beginFrame(frameInfo))
         continue;
-      this->onRender(dt);
-      this->renderer->endFrame();
+      // frame render
+      this->onRender(frameInfo);
+      // end frame
+      this->renderer->endFrame(frameInfo);
+      this->onEndFrame(frameInfo);
     }
   }
 }

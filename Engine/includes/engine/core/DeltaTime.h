@@ -14,6 +14,31 @@ namespace Engine {
     float asMilliseconds() const {
       return this->time * 1000.0f;
     }
+
+    float operator+(const DeltaTime& other) const {
+      return this->time + other.time;
+    }
+    float operator-(const DeltaTime& other) const {
+      return this->time - other.time;
+    }
+    float operator*(const DeltaTime& other) const {
+      return this->time * other.time;
+    }
+    float operator/(const DeltaTime& other) const {
+      return this->time / other.time;
+    }
+    float operator+(float other) const {
+      return this->time + other;
+    }
+    float operator-(float other) const {
+      return this->time - other;
+    }
+    float operator*(float other) const {
+      return this->time * other;
+    }
+    float operator/(float other) const {
+      return this->time / other;
+    }
   private:
     float time;
   };

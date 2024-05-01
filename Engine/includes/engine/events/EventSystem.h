@@ -12,17 +12,6 @@
 
 namespace Engine {
   class EventSystem {
-  public:
-    struct EventListenerHandle {
-      EventTag tag;
-      uint32_t handle;
-
-      EventListenerHandle() = delete;
-      EventListenerHandle(EventTag tag, uint32_t handle) : tag(tag), handle(handle) {}
-      EventListenerHandle(const EventListenerHandle&) = default;
-      EventListenerHandle(EventListenerHandle&&) = default;
-      EventListenerHandle& operator=(const EventListenerHandle&) = default;
-    };
   private:
     using EventListenerCallback = std::function<bool(Event&)>;
     struct EventListener {
@@ -59,10 +48,10 @@ namespace Engine {
         }
         return handled;
       }
-      bool pop(const EventListenerHandle& handle) {
-        auto it = std::find_if(this->c.begin(), this->c.end(), [&handle](const EventListener& listener) {
-          return listener.handle == handle.handle;
-          });
+      bool pop(uint64_t handle) {
+        auto it = std::find_if(this->c.begin(), this->c.end(), [handle](const EventListener& listener) {
+          return listener.handle == handle;
+        });
         if (it != this->c.end()) {
           this->c.erase(it);
           return true;
@@ -73,82 +62,102 @@ namespace Engine {
         return this->c.empty();
       }
     };
-  class EventQueue: public std::queue<std::unique_ptr<Event>> {
-  public:
-    bool empty() const {
-      return this->std::queue<std::unique_ptr<Event>>::empty();
-    }
-    template <typename T>
-    bool contains() {
-      auto tag = typename T::Tag{};
-      return this->contains(tag);
-    }
-    bool contains(EventTag tag) {
-      for (const auto& event : this->c) {
-        if (event->tag == tag)
-          return true;
+    class EventQueue : public std::queue<std::unique_ptr<Event>> {
+    public:
+      bool empty() const {
+        return this->std::queue<std::unique_ptr<Event>>::empty();
       }
-      return false;
-    }
+      template <typename T>
+      bool contains() {
+        auto tag = typename T::Tag{};
+        return this->contains(tag);
+      }
+      bool contains(EventTag tag) {
+        for (const auto& event : this->c) {
+          if (event->tag == tag)
+            return true;
+        }
+        return false;
+      }
 
-    bool remove(EventTag tag) {
-      for (auto it = this->c.begin(); it != this->c.end(); ++it) {
-        if ((*it)->tag == tag) {
+      bool remove(EventTag tag) {
+        for (auto it = this->c.begin(); it != this->c.end(); ++it) {
+          if ((*it)->tag == tag) {
+            this->c.erase(it);
+            return true;
+          }
+        }
+        return false;
+      }
+      template <typename T>
+      bool remove() {
+        auto tag = typename T::Tag{};
+        return this->remove(tag);
+      }
+
+      auto find(EventTag tag) {
+        return std::find_if(this->c.begin(), this->c.end(), [&tag](const std::unique_ptr<Event>& event) {
+          return event->tag == tag;
+        });
+      }
+
+      bool remove(std::deque<std::unique_ptr<Event>>::iterator it) {
+        if (it != this->c.end()) {
           this->c.erase(it);
           return true;
         }
+        return false;
       }
-      return false;
-    }
-    template <typename T>
-    bool remove() {
-      auto tag = typename T::Tag{};
-      return this->remove(tag);
-    }
-
-    auto find(EventTag tag) {
-      return std::find_if(this->c.begin(), this->c.end(), [&tag](const std::unique_ptr<Event>& event) {
-        return event->tag == tag;
-      });
-    }
-
-    bool remove(std::deque<std::unique_ptr<Event>>::iterator it) {
-      if (it != this->c.end()) {
-        this->c.erase(it);
-        return true;
-      }
-      return false;
-    }
-  };
+    };
   public:
     static EventSystem* Get() { return instance; }
     EventSystem();
     ~EventSystem();
 
+  private:
     template <typename T, typename F>
-    EventListenerHandle on(EventTag tag, F cb, uint8_t priority = 0) {
+    uint64_t _on(EventTag tag, F cb, uint8_t priority) {
       uint32_t handle = this->listenerId++;
       this->listeners[static_cast<EventTag::ID>(tag)].emplace([cb](Event& raw) {
         T& event = dynamic_cast<T&>(raw);
         return cb(event);
       }, priority, handle);
-      return { tag, handle };
+      return handle;
+    }
+  public:
+
+    template <typename T, typename F>
+    uint64_t on(EventTag tag, F cb, uint8_t priority = 0) {
+      if constexpr (std::is_same_v<std::invoke_result_t<F, T&>, bool>) {
+        return this->_on<T>(tag, cb, priority);
+      }
+      else {
+        return this->_on<T>(tag, [cb](T& event) {
+          cb(event);
+          return false;
+        }, priority);
+      }
     }
     template <typename T, typename F>
-    EventListenerHandle on(F cb, uint8_t priority = 0) {
+    uint64_t on(F cb, uint8_t priority = 0) {
       auto tag = typename T::Tag{};
       return this->on<T, F>(tag, cb, priority);
     }
     template <typename T, typename F>
-    EventListenerHandle on(std::string_view eventName, F cb, uint8_t priority = 0) {
+    uint64_t on(std::string_view eventName, F cb, uint8_t priority = 0) {
       EventTag tag{ eventName };
       return this->on<T, F>(tag, cb, priority);
     }
 
-    bool off(const EventListenerHandle& handle) {
-      if (this->listeners.count(static_cast<EventTag::ID>(handle.tag))) {
-        return this->listeners[static_cast<EventTag::ID>(handle.tag)].pop(handle);
+    bool off(EventTag tag, uint64_t handle) {
+      if (this->listeners.count(static_cast<EventTag::ID>(tag))) {
+        return this->listeners[static_cast<EventTag::ID>(tag)].pop(handle);
       }
+    }
+    template <typename T>
+    bool off(uint64_t handle) {
+      auto tag = typename T::Tag{};
+      return this->off(tag, handle);
     }
 
     template <typename T>

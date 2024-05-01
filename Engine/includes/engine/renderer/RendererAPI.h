@@ -3,16 +3,14 @@
 #include <cstdint>
 #include <memory>
 
+#include "FrameInfo.h"
+
 #include <engine/platform/Platform.h>
+#include <engine/renderer/Camera.h>
+#include <engine/scene/components/Transform.h>
 
 namespace Engine {
   struct ApplicationInfo;
-
-  struct GlobalUboObject {
-    glm::mat4 view;
-    glm::mat4 projection;
-    glm::mat4 viewProjection;
-  };
 
   class Renderer {
   public:
@@ -45,8 +43,10 @@ namespace Engine {
     Renderer& operator=(const Renderer&) = delete;
 
     virtual ~Renderer() = default;
-    virtual bool beginFrame() = 0;
-    virtual bool endFrame() = 0;
+    virtual float getAspectRatio() const = 0;
+    virtual glm::uvec2 getViewportSize() const = 0;
+    virtual bool beginFrame(FrameInfo& frameInfo) = 0;
+    virtual bool endFrame(FrameInfo& frameInfo) = 0;
     // Can be manually called to resize the frame buffer but will also be called by event system when window is resized
     virtual void onResize(uint32_t width, uint32_t height) = 0;
 

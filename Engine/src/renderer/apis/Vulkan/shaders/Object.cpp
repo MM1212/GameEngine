@@ -1,8 +1,10 @@
 #include "renderer/apis/Vulkan/shaders/Object.h"
+#include "renderer/apis/Vulkan/VulkanRenderer.h"
 
 using namespace Engine::Renderers::Vulkan::Shaders;
 
-Object::Object(Device& device, RenderPass& renderPass) : Base(device, Object::StagesName), renderPass(renderPass) {
+Object::Object(Renderer& ctx, RenderPass& renderPass)
+  : Base(ctx, Object::StagesName), renderPass(renderPass), ubo(ctx.getDevice(), ctx.getSwapchain().getMaxFramesInFlight()) {
   this->init();
 }
 
@@ -21,7 +23,27 @@ void Object::init() {
     vertexStage->getPipelineShaderStageCreateInfo(),
     fragStage->getPipelineShaderStageCreateInfo()
   };
-  // TODO: add descriptor set layout
+  // Descriptors
+  uint32_t maxFramesInFlight = this->ctx.getSwapchain().getMaxFramesInFlight();
+  this->globalDescriptorPool = std::move(DescriptorPool::Builder(this->ctx.getDevice())
+    .addPoolSize(VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, maxFramesInFlight)
+    .setMaxSets(maxFramesInFlight)
+    .build());
+  this->globalDescriptorSetLayout = std::move(DescriptorSetLayout::Builder(this->ctx.getDevice())
+    .addBinding(0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, VK_SHADER_STAGE_ALL_GRAPHICS)
+    .build());
+  this->globalDescriptorSets.resize(maxFramesInFlight);
+  for (uint32_t i = 0; i < maxFramesInFlight; i++) {
+    this->ubo.bind(
+      *this->globalDescriptorPool,
+      *this->globalDescriptorSetLayout,
+      i, 0,
+      this->globalDescriptorSets[i]
+    );
+  }
+  std::vector<VkDescriptorSetLayout> setLayouts = { *this->globalDescriptorSetLayout };
+  configInfo.descriptorSetLayouts = setLayouts;
+
   this->Base::init(configInfo);
 }
 
@@ -44,6 +66,19 @@ std::vector<VkVertexInputAttributeDescription> Object::Vertex::GetAttributeDescr
   return attributeDescriptions;
 }
 
-void Object::use(CommandBuffer& cmdBuffer) {
-  this->pipeline->bind(cmdBuffer);
+void Object::use(VkFrameInfo& frameInfo) {
+  this->pipeline->bind(frameInfo.cmdBuffer);
+  vkCmdBindDescriptorSets(
+    frameInfo.cmdBuffer,
+    VK_PIPELINE_BIND_POINT_GRAPHICS,
+    this->pipeline->getLayout(),
+    0, 1, &frameInfo.globalDescriptorSet,
+    0, nullptr
+  );
+}
+
+void Object::updateGlobalUniforms(VkFrameInfo& frameInfo) {
+  GlobalUbo& uboData = this->ubo;
+  uboData = frameInfo.shared.globalUbo;
+  this->ubo.update(frameInfo.frameIndex);
 }

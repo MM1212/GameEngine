@@ -53,6 +53,9 @@ namespace Engine::Renderers::Vulkan::Shaders {
 
     void bind(CommandBuffer& cmdBuffer, VkPipelineBindPoint bindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS);
     static void SetupDefaultConfigInfo(ConfigInfo& configInfo);
+
+    operator VkPipeline() const { return this->handle; }
+    VkPipelineLayout getLayout() const { return this->layout; }
   private:
     void init(ConfigInfo& configInfo);
     void createLayout(

@@ -1,4 +1,5 @@
 #include "engine/core/LayersManager.h"
+#include "renderer/FrameInfo.h"
 #include <engine/utils/logger.h>
 
 using Engine::LayersManager;
@@ -50,19 +51,17 @@ bool LayersManager::popOverlay(Ref<AppLayer> overlay) {
 }
 
 void LayersManager::onUpdate(DeltaTime dt) {
-  for (auto& layer : this->layers) {
-    layer->onUpdate(dt);
-  }
-  for (auto& overlay : this->overlays) {
-    overlay->onUpdate(dt);
-  }
+  this->onUpdateCallback(dt);
 }
 
-void LayersManager::onRender(DeltaTime dt) {
-  for (auto& layer : this->layers) {
-    layer->onRender(dt);
-  }
-  for (auto& overlay : this->overlays) {
-    overlay->onRender(dt);
-  }
+void LayersManager::onRender(FrameInfo& frameInfo) {
+  this->onRenderCallback(frameInfo);
+}
+
+void LayersManager::onBeginFrame(FrameInfo& frameInfo) {
+  this->onBeginFrameCallback(frameInfo);
+}
+
+void LayersManager::onEndFrame(FrameInfo& frameInfo) {
+  this->onEndFrameCallback(frameInfo);
 }

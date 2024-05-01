@@ -6,6 +6,7 @@
 #include <engine/utils/memory.h>
 #include <engine/events/EventSystem.h>
 #include <engine/renderer/RendererAPI.h>
+#include <engine/scene/Scene.h>
 #include "LayersManager.h"
 #include "DeltaTime.h"
 
@@ -40,11 +41,11 @@ namespace Engine {
     void run();
 
     void pushLayer(Ref<AppLayer> layer) { this->layersManager.pushLayer(layer); }
-    void pushOverlay(Ref<AppLayer> overlay) { this->layersManager.pushOverlay(overlay); }
     template <typename T, typename... Args>
-    Ref<T> pushLayer(Args&&... args) { return this->layersManager.pushLayer<T>(std::forward<Args>(args)...); }
-    template <typename T, typename... Args>
-    Ref<T> pushOverlay(Args&&... args) { return this->layersManager.pushOverlay<T>(std::forward<Args>(args)...); }
+    Ref<T> pushLayer(Args&&... args) {
+      return this->layersManager.pushLayer<T>(std::forward<Args>(args)...);
+    }
+    LayersManager& getLayersManager() { return this->layersManager; }
 
     Window& getWindow() { return *this->platform.window; }
     Input::InputManager& getInputManager() { return *this->platform.input; }
@@ -57,11 +58,14 @@ namespace Engine {
     std::unique_ptr<Renderer> renderer;
     bool running = false;
     bool suspended = false;
+
   private:
     LayersManager layersManager;
 
     void onUpdate(DeltaTime dt);
-    void onRender(DeltaTime dt);
+    void onRender(FrameInfo& frameInfo);
+    void onBeginFrame(FrameInfo& frameInfo);
+    void onEndFrame(FrameInfo& frameInfo);
   private:
     static Application* s_instance;
   };

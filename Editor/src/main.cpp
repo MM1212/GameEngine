@@ -12,7 +12,7 @@ namespace Editor {
       if (!this->Engine::Application::init()) {
         return false;
       }
-      this->pushLayer(std::make_shared<MainLayer>());
+      this->pushLayer<MainLayer>();
       return true;
     }
   };

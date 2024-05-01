@@ -1,4 +1,6 @@
 #include "renderer/apis/Vulkan/VulkanRenderer.h"
+#include "renderer/apis/Vulkan/shaders/Object.h"
+
 #include <core/EngineInfo.h>
 #include <renderer/logger.h>
 
@@ -23,12 +25,12 @@ void Renderer::init() {
   this->recreateSwapchain();
   this->createGraphicsCommandBuffers();
   this->createSyncObjects();
-  this->objectShader = MakeScope<Shaders::Object>(this->device, this->getMainRenderPass());
+  this->objectShader = MakeScope<Shaders::Object>(*this, this->getMainRenderPass());
   this->createObjectBuffers();
   this->uploadTestObjectData();
 }
 
-bool Renderer::beginFrame() {
+bool Renderer::beginFrame(FrameInfo& frameInfo) {
   ASSERT(!this->hasFrameStarted, "Renderer::beginFrame: Frame already started");
   if (this->recreateSwapchainFlag) {
     if (!this->recreateSwapchain()) {
@@ -50,8 +52,14 @@ bool Renderer::beginFrame() {
     return false;
   }
   this->hasFrameStarted = true;
+  VkFrameInfo vkFrameInfo{
+    frameInfo,
+    this->currentFrameIndex,
+    this->getCurrentGraphicsCommandBuffer(),
+    this->objectShader->getGlobalDescriptorSet(this->currentFrameIndex)
+  };
 
-  auto& cmdBuffer = this->getCurrentGraphicsCommandBuffer();
+  auto& cmdBuffer = vkFrameInfo.cmdBuffer;
   cmdBuffer.reset().beginRecording();
 
   VkViewport viewport = {};
@@ -75,7 +83,9 @@ bool Renderer::beginFrame() {
   );
 
   // TODO: tmp code
-  this->objectShader->use(cmdBuffer);
+  this->objectShader->updateGlobalUniforms(vkFrameInfo);
+
+  this->objectShader->use(vkFrameInfo);
   VkBuffer vertexBuffers[] = { this->objectVertexBuffer->getHandle() };
   VkDeviceSize offsets[] = { 0 };
   vkCmdBindVertexBuffers(cmdBuffer, 0, 1, vertexBuffers, offsets);
@@ -86,7 +96,7 @@ bool Renderer::beginFrame() {
   return true;
 }
 
-bool Renderer::endFrame() {
+bool Renderer::endFrame(FrameInfo& frameInfo) {
   ASSERT(this->hasFrameStarted, "Renderer::endFrame: Frame not started");
   auto& cmdBuffer = this->getCurrentGraphicsCommandBuffer();
 

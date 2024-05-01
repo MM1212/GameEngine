@@ -24,12 +24,6 @@ Swapchain::~Swapchain() {
   vkDestroySwapchainKHR(this->device, this->handle, this->device.getAllocator());
   LOG_RENDERER_INFO("Swapchain destroyed");
 
-  // clean up sync resources
-  // for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-  //   vkDestroySemaphore(this->device, this->imageAvailableSemaphores[i], this->device.getAllocator());
-  //   vkDestroySemaphore(this->device, this->renderFinishedSemaphores[i], this->device.getAllocator());
-  //   vkDestroyFence(this->device, this->inFlightFences[i], this->device.getAllocator());
-  // }
 }
 
 void Swapchain::init(const SwapchainCreateInfo& createInfo) {

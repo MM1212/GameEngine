@@ -1,6 +1,6 @@
 #pragma once
 
-#include "renderer/RendererAPI.h"
+#include "renderer/FrameInfo.h"
 #include "utils.h"
 #include "Device.h"
 #include "Swapchain.h"
@@ -11,7 +11,10 @@
 #include "Semaphore.h"
 #include "MemBuffer.h"
 
-#include "shaders/Object.h"
+// #include "shaders/Object.h"
+namespace Engine::Renderers::Vulkan::Shaders {
+  class Object;
+}
 
 #include <core/Application.h>
 #include <vulkan/vulkan.h>
@@ -27,8 +30,16 @@ namespace Engine::Renderers::Vulkan {
     Renderer& operator=(const Renderer&) = delete;
 
     ~Renderer() override;
-    bool beginFrame() override;
-    bool endFrame() override;
+
+    float getAspectRatio() const override {
+      return this->swapchain->getAspectRatio();
+    }
+    glm::uvec2 getViewportSize() const override {
+      return { this->swapchain->width(), this->swapchain->height() };
+    }
+
+    bool beginFrame(FrameInfo& frameInfo) override;
+    bool endFrame(FrameInfo& frameInfo) override;
     void onResize(uint32_t width, uint32_t height) override;
 
     Device& getDevice() { return this->device; }

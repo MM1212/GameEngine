@@ -3,6 +3,8 @@
 #include <string_view>
 #include <engine/core/DeltaTime.h>
 #include <memory>
+#include <engine/renderer/FrameInfo.h>
+#include <engine/core/Callbacks.h>
 
 namespace Engine {
   class Application;
@@ -15,9 +17,14 @@ namespace Engine {
     virtual void onAttach() {}
     virtual void onDetach() {}
     virtual void onUpdate(DeltaTime dt) {}
-    virtual void onRender(DeltaTime dt) {}
+    virtual void onRender(FrameInfo& frameInfo) {}
+    virtual void onBeginFrame(FrameInfo& frameInfo) {}
+    virtual void onEndFrame(FrameInfo& frameInfo) {}
 
     const std::string_view getName() const { return this->debugName; }
+  protected:
+    LayersManager& manager() const;
+
   protected:
     std::string_view debugName;
     Application& app;
