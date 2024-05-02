@@ -15,7 +15,7 @@ void Object::init() {
   auto fragStage = this->addStage<BuiltinStage>(StageType::Fragment);
   Pipeline::ConfigInfo configInfo = {};
   Pipeline::SetupDefaultConfigInfo(configInfo);
-  configInfo.enableRasterizationCulling();
+  // configInfo.enableRasterizationCulling();
   configInfo.bindingDescriptions = Vertex::GetBindingDescriptions();
   configInfo.attributeDescriptions = Vertex::GetAttributeDescriptions();
   configInfo.renderPass = this->renderPass;
@@ -44,6 +44,11 @@ void Object::init() {
   std::vector<VkDescriptorSetLayout> setLayouts = { *this->globalDescriptorSetLayout };
   configInfo.descriptorSetLayouts = setLayouts;
 
+  // push constants
+  configInfo.pushConstantRanges = {
+    { VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4) }
+  };
+
   this->Base::init(configInfo);
 }
 
@@ -59,7 +64,7 @@ std::vector<VkVertexInputAttributeDescription> Object::Vertex::GetAttributeDescr
   std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
 
   attributeDescriptions.push_back({ 0, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, position) });
-  // attributeDescriptions.push_back({ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) });
+  attributeDescriptions.push_back({ 1, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, color) });
   // attributeDescriptions.push_back({ 2, 0, VK_FORMAT_R32G32B32_SFLOAT, offsetof(Vertex, normal) });
   // attributeDescriptions.push_back({ 3, 0, VK_FORMAT_R32G32_SFLOAT, offsetof(Vertex, uv) });
 

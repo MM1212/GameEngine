@@ -26,7 +26,7 @@ void Camera::setViewportSize(uint32_t width, uint32_t height) {
   if (this->viewportSize.x == width && this->viewportSize.y == height)
     return;
   this->viewportSize = { width, height };
-  this->aspectRatio = static_cast<float>(width) / static_cast<float>(height);
+  this->aspectRatio = static_cast<float>(width) / height;
   this->computeProjection();
 }
 void Camera::computeProjection() {

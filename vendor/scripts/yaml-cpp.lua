@@ -10,6 +10,7 @@ project "yaml-cpp"
   kind "StaticLib"
   language "C++"
   cppdialect "C++20"
+  staticruntime "on"
 
   targetdir (PROJECT_VENDOR_DIR)
   objdir (PROJECT_OBJ_DIR)
@@ -30,12 +31,10 @@ project "yaml-cpp"
 
   filter "system:windows"
     systemversion "latest"
-    staticruntime "off"
 
   filter "system:linux"
     pic "On"
     systemversion "latest"
-    staticruntime "off"
 
   filter "configurations:Debug"
     runtime "Debug"

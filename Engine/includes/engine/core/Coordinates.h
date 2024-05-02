@@ -34,9 +34,9 @@ namespace Engine::Coordinates {
   static constexpr glm::vec2 Forward<glm::vec2> = {0, 0};
 
   template<>
-  static constexpr glm::vec3 Forward<glm::vec3> = {0, 0, 1};
+  static constexpr glm::vec3 Forward<glm::vec3> = {0, 0, -1};
 
   template<>
-  static constexpr glm::vec4 Forward<glm::vec4> = {0, 0, 1, 0};
+  static constexpr glm::vec4 Forward<glm::vec4> = {0, 0, -1, 0};
 
 }

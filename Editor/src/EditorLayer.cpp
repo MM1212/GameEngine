@@ -22,6 +22,7 @@ void MainLayer::onDetach() {
   this->manager().getOnBeginFrameCallback().disconnect(this->cbHandles.onBeginFrame);
 }
 void MainLayer::onUpdate(Engine::DeltaTime dt) {
+  this->profiler.update(dt);
   this->camera.onUpdate(dt);
 }
 void MainLayer::onRender(Engine::FrameInfo& frameInfo) {}

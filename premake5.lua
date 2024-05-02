@@ -15,7 +15,8 @@ workspace "GameEngine"
   defines {
     "_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING",
     "GLM_FORCE_RADIANS",
-    "GLM_FORCE_DEPTH_ZERO_TO_ONE"
+    'SPDLOG_NO_THREAD_ID',
+    "SPDLOG_COMPILED_LIB"
   }
   filter "configurations:Debug"
     defines {
@@ -28,7 +29,9 @@ workspace "GameEngine"
     }
   filter "system:linux"
     buildoptions { "-gdwarf-2" }
-    defines {'_GLIBCXX_DEBUG'}
+    defines {
+      'SPDLOG_CLOCK_COARSE'
+    }
   filter {}
 
 group "Vendor"

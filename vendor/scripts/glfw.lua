@@ -9,8 +9,7 @@ end
 project "GLFW"
 	kind "StaticLib"
 	language "C"
-	staticruntime "off"
-	warnings "off"
+	staticruntime "on"
 
 	targetdir (PROJECT_VENDOR_DIR)
 	objdir (PROJECT_OBJ_DIR)

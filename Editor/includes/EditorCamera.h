@@ -21,6 +21,6 @@ namespace Editor {
     glm::mat4 inverseViewMatrix{ 1.0f };
     Engine::Components::Transform transform{};
     float lookSpeed{ 3.f };
-    float moveSpeed{ 1.5f };
+    float moveSpeed{ 10.5f };
   };
 }

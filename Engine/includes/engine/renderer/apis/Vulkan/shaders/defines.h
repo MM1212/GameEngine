@@ -45,6 +45,9 @@ namespace Engine::Renderers::Vulkan {
         return stage;
       }
       static std::vector<uint8_t> ReadFile(const std::string_view filePath);
+
+      Pipeline& getPipeline() const { return *this->pipeline; }
+      VkPipelineLayout getPipelineLayout() const { return this->pipeline->getLayout(); }
     protected:
       virtual void init(const Pipeline::ConfigInfo& pipelineConfigInfo);
       friend class Pipeline;

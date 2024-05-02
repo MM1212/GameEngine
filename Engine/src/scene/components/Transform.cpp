@@ -7,33 +7,15 @@
 using Engine::Components::Transform;
 
 Transform::operator glm::mat4() const {
-  const float c3 = glm::cos(rotation.z);
-  const float s3 = glm::sin(rotation.z);
-  const float c2 = glm::cos(rotation.x);
-  const float s2 = glm::sin(rotation.x);
-  const float c1 = glm::cos(rotation.y);
-  const float s1 = glm::sin(rotation.y);
-  return glm::mat4{
-      {
-          scale.x * (c1 * c3 + s1 * s2 * s3),
-          scale.x * (c2 * s3),
-          scale.x * (c1 * s2 * s3 - c3 * s1),
-          0.0f,
-      },
-      {
-          scale.y * (c3 * s1 * s2 - c1 * s3),
-          scale.y * (c2 * c3),
-          scale.y * (c1 * c3 * s2 + s1 * s3),
-          0.0f,
-      },
-      {
-          scale.z * (c2 * s1),
-          scale.z * (-s2),
-          scale.z * (c1 * c2),
-          0.0f,
-      },
-      {translation.x, translation.y, translation.z, 1.0f}
-  };
+  // Transform::rotation is in euler angles in randians (XYZ)
+  glm::mat4 rx = glm::rotate(glm::mat4{ 1.f }, this->rotation.x, Coordinates::Right<glm::vec3>);
+  glm::mat4 ry = glm::rotate(glm::mat4{ 1.f }, this->rotation.y, Coordinates::Up<glm::vec3>);
+  glm::mat4 rz = glm::rotate(glm::mat4{ 1.f }, this->rotation.z, Coordinates::Forward<glm::vec3>);
+
+  glm::mat4 rotation = rx * ry * rz;
+  glm::mat4 scale = glm::scale(glm::mat4{ 1.f }, this->scale);
+  glm::mat4 transform = glm::translate(glm::mat4{ 1.f }, this->translation);
+  return scale * rotation * transform;
 }
 
 glm::mat3 Transform::computeNormalMatrix() const {
@@ -42,12 +24,12 @@ glm::mat3 Transform::computeNormalMatrix() const {
 
 glm::vec3 Transform::forward() const {
   return glm::normalize(glm::vec3{
-      glm::sin(rotation.y) * glm::cos(rotation.x),
-      glm::sin(rotation.x),
-      glm::cos(rotation.y) * glm::cos(rotation.x)
-    }) * glm::vec3{ 1, 1, -1 };
+    glm::sin(this->rotation.y) * glm::cos(this->rotation.x),
+    glm::sin(this->rotation.x),
+    glm::cos(this->rotation.y) * glm::cos(this->rotation.x)
+  }) * Coordinates::Forward<glm::vec3>;
 }
 
 glm::vec3 Transform::right() const {
-  return glm::normalize(glm::cross(forward(), Coordinates::Up<glm::vec3>));
+  return glm::normalize(glm::cross(this->forward(), Coordinates::Up<glm::vec3>));
 }

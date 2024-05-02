@@ -13,7 +13,7 @@ namespace Engine::Renderers::Vulkan {
       uint32_t instanceCount,
       VkBufferUsageFlags usageFlags,
       VkMemoryPropertyFlags memoryPropertyFlags,
-      VkDeviceSize minOffsetAlignment = 1,
+      VkDeviceSize minOffsetAlignment = static_cast<VkDeviceSize>(-1),
       bool bindOnCreation = true
     );
     ~MemBuffer();

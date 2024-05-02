@@ -8,6 +8,7 @@ project "spdlog"
   kind "StaticLib"
   language "C++"
   cppdialect "C++20"
+  staticruntime "On"
 
   targetdir(PROJECT_VENDOR_DIR)
   objdir(PROJECT_OBJ_DIR)
@@ -25,12 +26,10 @@ project "spdlog"
 
   filter "system:linux"
     systemversion "latest"
-    staticruntime "On"
     pic "On"
 
   filter "system:windows"
     systemversion "latest"
-    staticruntime "On"
 
   filter "configurations:debug"
 		runtime "Debug"

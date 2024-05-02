@@ -4,6 +4,7 @@
 #include <engine/core/LayersManager.h>
 #include <engine/scene/Scene.h>
 #include "EditorCamera.h"
+#include <systems/Profiler.hpp>
 
 namespace Editor {
   class MainLayer : public Engine::AppLayer {
@@ -18,6 +19,7 @@ namespace Editor {
     virtual void onBeginFrame(Engine::FrameInfo& frameInfo) override;
     virtual void onEndFrame(Engine::FrameInfo& frameInfo) override;
   private:
+    Profiler profiler;
     EditorCamera camera;
     struct {
       uint64_t onUpdate{ static_cast<uint64_t>(-1) };

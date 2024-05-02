@@ -18,7 +18,10 @@
       "defines": [
         "_DEBUG", "UNICODE", "_UNICODE",
         "ENABLE_ENGINE_LOGGING",
-        "ENABLE_APP_LOGGING"
+        "ENABLE_APP_LOGGING",
+        "GLM_FORCE_RADIANS",
+        "SPDLOG_NO_THREAD_ID",
+        "SPDLOG_COMPILED_LIB"
       ],
       "windowsSdkVersion": "10.0.22621.0",
       "compilerPath": "cl.exe",

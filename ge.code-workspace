@@ -19,9 +19,9 @@
       "**/Thumbs.db": true,
       "**/*.o": true,
       "**/*.d": true,
-      "**/*.vcxproj*": true,
+      // "**/*.vcxproj*": true,
       "**/*.sln": true,
-      "vendor/**/*": true
+      // "vendor/**/*": true
     },
     "files.associations": {
       ".env.production": "dotenv",

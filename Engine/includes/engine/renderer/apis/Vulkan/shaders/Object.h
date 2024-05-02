@@ -15,6 +15,7 @@ namespace Engine::Renderers::Vulkan {
     public:
       struct Vertex {
         glm::vec3 position;
+        glm::vec3 color;
 
         static std::vector<VkVertexInputBindingDescription> GetBindingDescriptions();
         static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();

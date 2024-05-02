@@ -1,6 +1,8 @@
 #include "renderer/apis/Vulkan/MemBuffer.h"
 
 #include <cstring>
+#include <numeric>
+
 #include <utils/asserts.h>
 
 using namespace Engine::Renderers::Vulkan;
@@ -32,6 +34,10 @@ MemBuffer::MemBuffer(
 ) :
   device{ device }, instanceCount{ instanceCount }, instanceSize{ instanceSize },
   usageFlags{ usageFlags }, memoryPropertyFlags{ memoryPropertyFlags } {
+  if (minOffsetAlignment == static_cast<VkDeviceSize>(-1)) {
+    auto& limits = device.getPhysicalDeviceInfo().properties.limits;
+    minOffsetAlignment = std::lcm(limits.minUniformBufferOffsetAlignment, limits.nonCoherentAtomSize);
+  }
   this->alignmentSize = GetAlignment(instanceSize, minOffsetAlignment);
   this->size = alignmentSize * instanceCount;
   device.createBuffer(this->size, usageFlags, memoryPropertyFlags, buffer, memory, bindOnCreation);

@@ -2,7 +2,7 @@ project "Engine"
   kind "StaticLib"
   language "C++"
   cppdialect "C++20"
-  staticruntime "off"
+  staticruntime "on"
 
   targetdir (PROJECT_TARGET_DIR)
   objdir (PROJECT_OBJ_DIR)

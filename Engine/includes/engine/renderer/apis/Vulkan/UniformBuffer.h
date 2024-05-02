@@ -25,8 +25,8 @@ namespace Engine::Renderers::Vulkan {
     UniformBuffer& operator=(UniformBuffer&&) = default;
 
     void update(uint32_t frameIndex) {
-      this->buffer->writeTo(&this->data, sizeof(T), sizeof(T) * frameIndex);
-      this->buffer->flush(sizeof(T), sizeof(T) * frameIndex);
+      this->buffer->writeToIndex(&this->data, frameIndex);
+      this->buffer->flushIndex(frameIndex);
     }
 
     bool bind(
@@ -36,7 +36,7 @@ namespace Engine::Renderers::Vulkan {
       uint32_t binding,
       VkDescriptorSet& outSet
     ) {
-      auto bufferInfo = this->buffer->getDescriptorInfo(sizeof(T), sizeof(T) * frameIndex);
+      auto bufferInfo = this->buffer->descriptorInfoForIndex(frameIndex);
       return DescriptorWriter(layout, pool)
         .write(binding, &bufferInfo)
         .build(outSet);
