@@ -46,8 +46,8 @@ void EditorCamera::onUpdate(DeltaTime dt) {
     changed = true;
   }
 
-  const glm::vec3 forward = this->transform.forward(); //glm::normalize(glm::vec3(this->inverseViewMatrix[2]));
-  const glm::vec3 right = this->transform.right(); //glm::normalize(glm::vec3(this->inverseViewMatrix[0]));
+  const glm::vec3 forward = glm::normalize(glm::vec3(this->inverseViewMatrix[2])) * -1.f;
+  const glm::vec3 right = glm::normalize(glm::vec3(this->inverseViewMatrix[0]));
 
   glm::vec3 movement{ 0.f };
 
@@ -91,14 +91,28 @@ void EditorCamera::onRender(FrameInfo& frameInfo) {
 }
 
 void EditorCamera::onProjectionUpdate() {
-  glm::mat4 rx = glm::rotate(glm::mat4{ 1.f }, this->transform.rotation.x, Coordinates::Right<glm::vec3>);
-  glm::mat4 ry = glm::rotate(glm::mat4{ 1.f }, this->transform.rotation.y, Coordinates::Up<glm::vec3>);
-  glm::mat4 rz = glm::rotate(glm::mat4{ 1.f }, this->transform.rotation.z, Coordinates::Forward<glm::vec3>);
-
-  glm::mat4 rotation = rx * ry * rz;
-  glm::mat4 translation = glm::translate(glm::mat4{ 1.f }, this->transform.translation);
-  
-  this->viewMatrix = glm::inverse(rotation * translation);
+  const float c3 = glm::cos(this->transform.rotation.z);
+  const float s3 = glm::sin(this->transform.rotation.z);
+  const float c2 = glm::cos(this->transform.rotation.x);
+  const float s2 = glm::sin(this->transform.rotation.x);
+  const float c1 = glm::cos(this->transform.rotation.y);
+  const float s1 = glm::sin(this->transform.rotation.y);
+  const glm::vec3 u{ (c1 * c3 + s1 * s2 * s3), (c2 * s3), (c1 * s2 * s3 - c3 * s1) };
+  const glm::vec3 v{ (c3 * s1 * s2 - c1 * s3), (c2 * c3), (c1 * c3 * s2 + s1 * s3) };
+  const glm::vec3 w{ (c2 * s1), (-s2), (c1 * c2) };
+  this->viewMatrix = glm::mat4{ 1.f };
+  this->viewMatrix[0][0] = u.x;
+  this->viewMatrix[1][0] = u.y;
+  this->viewMatrix[2][0] = u.z;
+  this->viewMatrix[0][1] = v.x;
+  this->viewMatrix[1][1] = v.y;
+  this->viewMatrix[2][1] = v.z;
+  this->viewMatrix[0][2] = w.x;
+  this->viewMatrix[1][2] = w.y;
+  this->viewMatrix[2][2] = w.z;
+  this->viewMatrix[3][0] = -glm::dot(u, this->transform.position);
+  this->viewMatrix[3][1] = -glm::dot(v, this->transform.position);
+  this->viewMatrix[3][2] = -glm::dot(w, this->transform.position);
   this->projectionViewMatrix = this->projection * this->viewMatrix;
   this->inverseViewMatrix = glm::inverse(this->viewMatrix);
   // LOG_APP_INFO("Camera:\n - Position: {}\n - Rotation: {}\n - View Matrix:\n{}\n - Projection View Matrix:\n{}\n - Inverse View Matrix:\n{}",
