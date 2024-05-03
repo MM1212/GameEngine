@@ -93,8 +93,8 @@ bool Renderer::beginFrame(FrameInfo& frameInfo) {
   vkCmdBindIndexBuffer(cmdBuffer, this->objectIndexBuffer->getHandle(), 0, VK_INDEX_TYPE_UINT32);
 
   // plane
-  glm::vec3 offset{0.f, -5.f, 0.f};
-  glm::vec3 scale{20.f, 1.f, 20.f};
+  glm::vec3 offset{ 0.f, -5.f, 0.f };
+  glm::vec3 scale{ 20.f, 1.f, 20.f };
   glm::mat4 planeModel = glm::translate(glm::mat4(1.f), offset) * glm::scale(glm::mat4(1.f), scale);
   vkCmdPushConstants(
     cmdBuffer,
@@ -104,10 +104,10 @@ bool Renderer::beginFrame(FrameInfo& frameInfo) {
   );
   vkCmdDrawIndexed(cmdBuffer, 6, 1, 36, 0, 0);
 
-  static float angle = 0.f;
-  angle += 2.f * frameInfo.deltaTime;
-  glm::mat4 cubeModel = glm::rotate(glm::mat4(1.f), angle, Coordinates::Up<glm::vec3>);
-
+  // static float angle = 0.f;
+  // angle += 2.f * frameInfo.deltaTime;
+  // glm::mat4 cubeModel = glm::rotate(glm::mat4(1.f), angle, Coordinates::Up<glm::vec3>);
+  glm::mat4 cubeModel = glm::mat4{ 1.f };
   vkCmdPushConstants(
     cmdBuffer,
     this->objectShader->getPipelineLayout(),
@@ -271,43 +271,50 @@ void Renderer::uploadDataToBuffer(
 void Renderer::uploadTestObjectData() {
   constexpr float mult = 10.f;
   std::vector<Shaders::Object::Vertex> vertices = {
+    // right face (white)
     {{-.5f, -.5f, -.5f}, {.9f, .9f, .9f}},
     {{-.5f, .5f, .5f}, {.9f, .9f, .9f}},
     {{-.5f, -.5f, .5f}, {.9f, .9f, .9f}},
     {{-.5f, .5f, -.5f}, {.9f, .9f, .9f}},
 
-    // right face (yellow)
+    // left face (yellow)
     {{.5f, -.5f, -.5f}, {.8f, .8f, .1f}},
     {{.5f, .5f, .5f}, {.8f, .8f, .1f}},
     {{.5f, -.5f, .5f}, {.8f, .8f, .1f}},
     {{.5f, .5f, -.5f}, {.8f, .8f, .1f}},
 
-    // top face (orange, remember y axis points down)
+    // bottom face (orange)
     {{-.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
     {{.5f, -.5f, .5f}, {.9f, .6f, .1f}},
     {{-.5f, -.5f, .5f}, {.9f, .6f, .1f}},
     {{.5f, -.5f, -.5f}, {.9f, .6f, .1f}},
 
-    // bottom face (red)
+    // top face (red)
     {{-.5f, .5f, -.5f}, {.8f, .1f, .1f}},
     {{.5f, .5f, .5f}, {.8f, .1f, .1f}},
     {{-.5f, .5f, .5f}, {.8f, .1f, .1f}},
     {{.5f, .5f, -.5f}, {.8f, .1f, .1f}},
 
-    // nose face (blue)
+    // tail face (blue)
     {{-.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
     {{.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
     {{-.5f, .5f, 0.5f}, {.1f, .1f, .8f}},
     {{.5f, -.5f, 0.5f}, {.1f, .1f, .8f}},
 
-    // tail face (green)
+    // nose face (green)
     {{-.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
     {{.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
     {{-.5f, .5f, -0.5f}, {.1f, .8f, .1f}},
     {{.5f, -.5f, -0.5f}, {.1f, .8f, .1f}},
   };
-  std::vector<uint32_t> indices = { 0,  1,  2,  0,  3,  1,  4,  5,  6,  4,  7,  5,  8,  9,  10, 8,  11, 9,
-                          12, 13, 14, 12, 15, 13, 16, 17, 18, 16, 19, 17, 20, 21, 22, 20, 23, 21 };
+  std::vector<uint32_t> indices = {
+    2,  1,  0,  1,  3,  0, // right face
+    4,  5,  6,  4,  7,  5, // left face
+    8,  9,  10, 8,  11, 9, // bottom face
+    14, 13, 12, 13, 15, 12, // top face
+    16, 17, 18, 16, 19, 17, // tail face
+    22, 21, 20, 21, 23, 20 // nose face
+  };
   this->uploadDataToBuffer(
     *this->objectVertexBuffer,
     this->device.getGraphicsQueue(),

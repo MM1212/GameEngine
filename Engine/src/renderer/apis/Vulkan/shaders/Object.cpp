@@ -15,7 +15,7 @@ void Object::init() {
   auto fragStage = this->addStage<BuiltinStage>(StageType::Fragment);
   Pipeline::ConfigInfo configInfo = {};
   Pipeline::SetupDefaultConfigInfo(configInfo);
-  // configInfo.enableRasterizationCulling();
+  configInfo.enableRasterizationCulling();
   configInfo.bindingDescriptions = Vertex::GetBindingDescriptions();
   configInfo.attributeDescriptions = Vertex::GetAttributeDescriptions();
   configInfo.renderPass = this->renderPass;

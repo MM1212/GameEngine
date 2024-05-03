@@ -12,5 +12,17 @@ namespace Engine {
   struct FrameInfo {
     float deltaTime{};
     GlobalUbo globalUbo{};
+
+    void uploadCameraParameters(
+      const glm::mat4& view,
+      const glm::mat4& projection,
+      const glm::mat4& projectionView,
+      const glm::mat4& inverseView
+    ) {
+      globalUbo.view = view;
+      globalUbo.projection = projection;
+      globalUbo.projectionView = projectionView;
+      globalUbo.inverseView = inverseView;
+    }
   };
 }

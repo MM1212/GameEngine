@@ -16,7 +16,7 @@ using Editor::EditorCamera;
 
 EditorCamera::EditorCamera() {
   this->transform.translation.z = 5.f;
-  this->transform.rotation.y = 0.f;
+  this->transform.rotation.y = glm::pi<float>();
   this->setPerspective(45.f, .1f, 1000.f);
   EventSystem::Get()->on<WindowResizeEvent>([this](const WindowResizeEvent& e) {
     this->setViewportSize(e.width, e.height);
@@ -85,10 +85,7 @@ void EditorCamera::onUpdate(DeltaTime dt) {
 }
 
 void EditorCamera::onRender(FrameInfo& frameInfo) {
-  frameInfo.globalUbo.projection = this->projection;
-  frameInfo.globalUbo.view = this->viewMatrix;
-  frameInfo.globalUbo.projectionView = this->projectionViewMatrix;
-  frameInfo.globalUbo.inverseView = this->inverseViewMatrix;
+  frameInfo.uploadCameraParameters(this->viewMatrix, this->projection, this->projectionViewMatrix, this->inverseViewMatrix);
 }
 
 void EditorCamera::onProjectionUpdate() {
