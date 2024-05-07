@@ -7,6 +7,7 @@ project "assets"
   objdir (PROJECT_OBJ_DIR)
   files {
     "models/**.obj",
+    "configs/**.yaml",
   }
   filter { "files:**"}
     buildmessage "Copy %{file.relpath} to %{cfg.targetdir}/%{file.relpath}"

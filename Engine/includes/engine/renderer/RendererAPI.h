@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "FrameInfo.h"
+#include "Texture.h"
 
 #include <engine/platform/Platform.h>
 #include <engine/renderer/Camera.h>
@@ -50,12 +51,18 @@ namespace Engine {
     // Can be manually called to resize the frame buffer but will also be called by event system when window is resized
     virtual void onResize(uint32_t width, uint32_t height) = 0;
 
-    static std::shared_ptr<spdlog::logger>& GetLogger() { return Logger; }
-    static std::unique_ptr<Renderer> Create(ApplicationInfo& appInfo, Platform& platform, API api = DEFAULT_API);
+    virtual Ref<Texture2D> createTexture2D(const TextureSpecification& spec) = 0;
+    virtual Ref<Texture2D> createTexture2D(const std::string_view& path) = 0;
+
+    static Ref<spdlog::logger>& GetLogger() { return Logger; }
+    static Scope<Renderer> Create(ApplicationInfo& appInfo, Platform& platform, API api = DEFAULT_API);
+    static API GetAPI() { return instance->api; }
+    static Renderer* Get() { return instance; }
   protected:
-    static std::shared_ptr<spdlog::logger> Logger;
+    static Ref<spdlog::logger> Logger;
     ApplicationInfo& appInfo;
     Platform& platform;
     API api;
+    static Renderer* instance;
   };
 }

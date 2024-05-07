@@ -1,9 +1,9 @@
 #pragma once
 
 #include "defines.h"
-#include "Device.h"
 
 namespace Engine::Renderers::Vulkan {
+  class Device;
   class Fence {
   public:
     Fence(Device& device, bool signaled = false);

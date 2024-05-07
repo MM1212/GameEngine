@@ -2,12 +2,13 @@
 
 #include "defines.h"
 #include "Device.h"
+#include "CommandBuffer.h"
 
 namespace Engine::Renderers::Vulkan {
   struct ImageViewCreateInfo {
     union {
       VkImageAspectFlags aspectMask;
-      VkImageSubresourceRange subresourceRange = {0, 0, 1, 0, 1};
+      VkImageSubresourceRange subresourceRange = { 0, 0, 1, 0, 1 };
     };
     VkFormat format = VK_FORMAT_UNDEFINED;
   };
@@ -30,7 +31,7 @@ namespace Engine::Renderers::Vulkan {
   };
   class Image {
   public:
-    Image(Device& device,const ImageCreateInfo& createInfo);
+    Image(Device& device, const ImageCreateInfo& createInfo);
     Image(const Image&) = delete;
     Image& operator=(const Image&) = delete;
     Image(Image&&);
@@ -51,12 +52,52 @@ namespace Engine::Renderers::Vulkan {
     VkMemoryPropertyFlags getMemoryProperties() const { return this->memoryProperties; }
 
     void createView(const ImageViewCreateInfo& createViewInfo);
+    void transitionLayout(
+      VkImageLayout oldLayout,
+      VkImageLayout newLayout
+    ) {
+      auto cmdBuffer = this->device.createGraphicsSingleTimeCmds();
+      auto graphicsQueueFamily = this->device.getQueueFamilies().graphicsFamily;
+      return this->transitionLayout(cmdBuffer, graphicsQueueFamily, oldLayout, newLayout);
+    }
+    void transitionLayout(
+      CommandBuffer& cmdBuffer,
+      VkImageLayout oldLayout,
+      VkImageLayout newLayout
+    ) {
+      auto graphicsQueueFamily = this->device.getQueueFamilies().graphicsFamily;
+      return this->transitionLayout(cmdBuffer, graphicsQueueFamily, oldLayout, newLayout);
+    }
+    void transitionLayout(
+      CommandBuffer& cmdBuffer,
+      uint32_t queueFamilyIndex,
+      VkImageLayout oldLayout,
+      VkImageLayout newLayout
+    );
+    void copyFromBuffer(
+      VkBuffer buffer,
+      VkDeviceSize bufferOffset = 0
+    ) {
+      auto cmdBuffer = this->device.createGraphicsSingleTimeCmds();
+      return this->copyFromBuffer(cmdBuffer, buffer, bufferOffset);
+    }
+    void copyFromBuffer(
+      CommandBuffer& cmdBuffer,
+      VkBuffer buffer,
+      VkDeviceSize bufferOffset = 0
+    );
   private:
     void init(const ImageCreateInfo& createInfo);
   private:
     Device& device;
     VkImageType type;
-    glm::uvec2 size;
+    union {
+      glm::uvec2 size;
+      struct {
+        uint32_t width;
+        uint32_t height;
+      };
+    };
     VkFormat format;
     VkImageTiling tiling;
     VkImageUsageFlags usage;

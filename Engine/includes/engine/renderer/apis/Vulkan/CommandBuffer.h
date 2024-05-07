@@ -1,7 +1,6 @@
 #pragma once
 
 #include "defines.h"
-#include "Device.h"
 #include "Fence.h"
 
 #include <glm/glm.hpp>
@@ -23,6 +22,7 @@ namespace Engine::Renderers::Vulkan {
     bool resetFence = true;
     Fence* fence = nullptr;
   };
+  class Device;
   class CommandBuffer {
   public:
     using State = CommandBufferState;
@@ -30,7 +30,7 @@ namespace Engine::Renderers::Vulkan {
 
     CommandBuffer(Device& device, VkCommandPool pool, bool isPrimary = true);
     CommandBuffer(Device& device, VkCommandPool pool, VkCommandBuffer handle, VkCommandBufferLevel level);
-    
+
     CommandBuffer(const CommandBuffer&) = delete;
     CommandBuffer& operator=(const CommandBuffer&) = delete;
 
@@ -81,7 +81,7 @@ namespace Engine::Renderers::Vulkan {
 
   // Command buffer that starts right away in a recording state
   // when endRecording is called (or destructor), it will be submitted and discarded
-  class DiscardableCommandBuffer : CommandBuffer {
+  class DiscardableCommandBuffer : public CommandBuffer {
   public:
     DiscardableCommandBuffer(
       Device& device,
@@ -91,6 +91,13 @@ namespace Engine::Renderers::Vulkan {
       bool isPrimary = true
     );
     ~DiscardableCommandBuffer();
+
+    DiscardableCommandBuffer(const DiscardableCommandBuffer&) = delete;
+    DiscardableCommandBuffer& operator=(const DiscardableCommandBuffer&) = delete;
+
+    DiscardableCommandBuffer(DiscardableCommandBuffer&&) = default;
+    DiscardableCommandBuffer& operator=(DiscardableCommandBuffer&&) = default;
+
     DiscardableCommandBuffer& endRecording() override;
 
     operator VkCommandBuffer() const { return this->handle; }
@@ -98,4 +105,6 @@ namespace Engine::Renderers::Vulkan {
     VkQueue submitQueue;
     CommandBufferSubmitInfo submitInfo;
   };
+  using SingleTimeCommandBuffer = DiscardableCommandBuffer;
+  using SingleUseCommandBuffer = DiscardableCommandBuffer;
 }

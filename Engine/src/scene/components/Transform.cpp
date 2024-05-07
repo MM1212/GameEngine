@@ -7,15 +7,9 @@
 using Engine::Components::Transform;
 
 Transform::operator glm::mat4() const {
-  // Transform::rotation is in euler angles in randians (XYZ)
-  glm::mat4 rx = glm::rotate(glm::mat4{ 1.f }, this->rotation.x, Coordinates::Right<glm::vec3>);
-  glm::mat4 ry = glm::rotate(glm::mat4{ 1.f }, this->rotation.y, Coordinates::Up<glm::vec3>);
-  glm::mat4 rz = glm::rotate(glm::mat4{ 1.f }, this->rotation.z, Coordinates::Forward<glm::vec3>);
-
-  glm::mat4 rotation = rx * ry * rz;
-  glm::mat4 scale = glm::scale(glm::mat4{ 1.f }, this->scale);
-  glm::mat4 transform = glm::translate(glm::mat4{ 1.f }, this->translation);
-  return scale * rotation * transform;
+  return glm::translate(glm::mat4(1.f), this->position) *
+    glm::toMat4(glm::quat(this->rotation)) *
+    glm::scale(glm::mat4(1.f), this->scale);
 }
 
 glm::mat3 Transform::computeNormalMatrix() const {

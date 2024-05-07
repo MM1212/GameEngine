@@ -28,14 +28,16 @@ project "Engine"
     "%{Vendors.ImGuizmo.shared.include}",
     "%{Vendors.entt.shared.include}",
     "%{Vendors.yaml_cpp.shared.include}",
-    "%{Vendors.Vulkan.shared.include}"
+    "%{Vendors.Vulkan.shared.include}",
+    "%{Vendors.stb_image.shared.include}"
   }
 
   links {
     "GLFW",
     "ImGui",
     "yaml-cpp",
-    "spdlog"
+    "spdlog",
+    "stb_image"
   }
 
   dependson {'assets', 'shaders'}

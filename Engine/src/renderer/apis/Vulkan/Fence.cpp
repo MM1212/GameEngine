@@ -1,4 +1,5 @@
 #include "renderer/apis/Vulkan/Fence.h"
+#include "renderer/apis/Vulkan/Device.h"
 #include <renderer/logger.h>
 
 using namespace Engine::Renderers::Vulkan;

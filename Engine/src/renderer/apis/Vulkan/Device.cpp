@@ -558,12 +558,7 @@ void Device::copyBuffer(
     submitInfo.resetFence = true;
   }
 
-  DiscardableCommandBuffer cmdBuffer(
-    *this,
-    pool,
-    queue,
-    submitInfo
-  );
+  DiscardableCommandBuffer cmdBuffer = this->createSingleTimeCmds(pool, queue, submitInfo);
 
   VkBufferCopy copyRegion{};
   copyRegion.srcOffset = srcOffset;
@@ -573,12 +568,27 @@ void Device::copyBuffer(
 }
 
 void Device::copyBufferToImage(
-  VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount) {
-  DiscardableCommandBuffer commandBuffer(
-    *this,
-    this->graphicsCommandPool,
-    this->getGraphicsQueue()
-  );
+  VkBuffer buffer,
+  VkImage image,
+  uint32_t width,
+  uint32_t height,
+  uint32_t layerCount,
+  VkQueue queue,
+  VkCommandPool pool,
+  Fence* fence
+) {
+  if (queue == VK_NULL_HANDLE)
+    queue = this->getGraphicsQueue();
+  if (pool == VK_NULL_HANDLE)
+    pool = this->graphicsCommandPool;
+  CommandBuffer::SubmitInfo submitInfo{};
+
+  if (fence != VK_NULL_HANDLE) {
+    submitInfo.fence = fence;
+    submitInfo.resetFence = true;
+  }
+
+  DiscardableCommandBuffer cmdBuffer = this->createSingleTimeCmds(pool, queue, submitInfo);
 
   VkBufferImageCopy region{};
   region.bufferOffset = 0;
@@ -594,7 +604,7 @@ void Device::copyBufferToImage(
   region.imageExtent = { width, height, 1 };
 
   vkCmdCopyBufferToImage(
-    commandBuffer,
+    cmdBuffer,
     buffer,
     image,
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,

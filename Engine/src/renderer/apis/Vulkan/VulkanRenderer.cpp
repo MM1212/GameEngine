@@ -1,8 +1,10 @@
 #include "renderer/apis/Vulkan/VulkanRenderer.h"
 #include "renderer/apis/Vulkan/shaders/Object.h"
+#include "renderer/apis/Vulkan/Texture2D.h"
 
 #include <core/EngineInfo.h>
 #include <core/Coordinates.h>
+#include <core/PoolManager.h>
 #include <renderer/logger.h>
 
 using Engine::Renderers::Vulkan::Renderer;
@@ -11,6 +13,7 @@ Renderer::Renderer(ApplicationInfo& appInfo, Platform& platform)
   : Engine::Renderer(appInfo, platform, Renderer::API::Vulkan),
   device(appInfo, *platform.window) {
   this->init();
+  instance = this;
 }
 
 Renderer::~Renderer() {
@@ -228,18 +231,23 @@ void Renderer::createSyncObjects() {
   }
 }
 
+static Engine::PoolManager::Pool* vertexPool = nullptr;
+static Engine::PoolManager::Pool* indexPool = nullptr;
+
 void Renderer::createObjectBuffers() {
+  vertexPool = Engine::PoolManager::Get<Engine::Pools::RendererVertices>();
   this->objectVertexBuffer = MakeScope<MemBuffer>(
     this->device,
     sizeof(Shaders::Object::Vertex),
-    1024 * 1024,
+    static_cast<uint32_t>(vertexPool->getMaxSize()),
     VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
+  indexPool = Engine::PoolManager::Get<Engine::Pools::RendererIndices>();
   this->objectIndexBuffer = MakeScope<MemBuffer>(
     this->device,
     sizeof(uint32_t),
-    1024 * 1024,
+    static_cast<uint32_t>(indexPool->getMaxSize()),
     VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
   );
@@ -324,6 +332,7 @@ void Renderer::uploadTestObjectData() {
     vertices.size() * sizeof(Shaders::Object::Vertex),
     this->objectVertexOffset
   );
+  vertexPool += vertices.size();
   this->objectVertexOffset += vertices.size() * sizeof(Shaders::Object::Vertex);
   this->uploadDataToBuffer(
     *this->objectIndexBuffer,
@@ -334,6 +343,7 @@ void Renderer::uploadTestObjectData() {
     indices.size() * sizeof(uint32_t),
     this->objectIndexOffset
   );
+  indexPool += indices.size();
   this->objectIndexOffset += indices.size() * sizeof(uint32_t);
 
   std::vector<Shaders::Object::Vertex> planeVertices = {
@@ -355,6 +365,7 @@ void Renderer::uploadTestObjectData() {
     planeVertices.size() * sizeof(Shaders::Object::Vertex),
     this->objectVertexOffset
   );
+  vertexPool += planeVertices.size();
   this->objectVertexOffset += planeVertices.size() * sizeof(Shaders::Object::Vertex);
   this->uploadDataToBuffer(
     *this->objectIndexBuffer,
@@ -365,5 +376,14 @@ void Renderer::uploadTestObjectData() {
     planeIndices.size() * sizeof(uint32_t),
     this->objectIndexOffset
   );
+  indexPool += planeIndices.size();
   this->objectIndexOffset += planeIndices.size() * sizeof(uint32_t);
+}
+
+Engine::Ref<Engine::Texture2D> Renderer::createTexture2D(const TextureSpecification& spec) {
+  return MakeRef<Texture2D>(this->device, spec);
+}
+Engine::Ref<Engine::Texture2D> Renderer::createTexture2D(const std::string_view& path) {
+  ASSERT(false, "Not implemented");
+  return nullptr;
 }

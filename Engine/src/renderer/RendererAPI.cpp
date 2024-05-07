@@ -8,6 +8,7 @@
 using Engine::Renderer;
 
 std::shared_ptr<spdlog::logger> Renderer::Logger = nullptr;
+Renderer* Renderer::instance = nullptr;
 
 Renderer::Renderer(ApplicationInfo& appInfo, Platform& platform, API api)
   : appInfo(appInfo), platform(platform), api(api) {

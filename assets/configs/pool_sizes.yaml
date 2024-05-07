@@ -1,0 +1,5 @@
+pools:
+  - name: RENDERER_VERTICES
+    size: 1048576
+  - name: RENDERER_INDICES
+    size: 1048576

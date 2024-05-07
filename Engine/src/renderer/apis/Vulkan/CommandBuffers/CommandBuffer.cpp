@@ -1,4 +1,5 @@
 #include "renderer/apis/Vulkan/CommandBuffer.h"
+#include <renderer/apis/Vulkan/Device.h>
 
 using namespace Engine::Renderers::Vulkan;
 

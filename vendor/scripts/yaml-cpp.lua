@@ -25,10 +25,6 @@ project "yaml-cpp"
     sFiles "include"
   }
 
-  defines {
-    "YAML_CPP_STATIC_DEFINE"
-  }
-
   filter "system:windows"
     systemversion "latest"
 

@@ -9,6 +9,9 @@ namespace Engine {
     glm::mat4 projectionView{1.f};
     glm::mat4 inverseView{1.f};
   };
+  struct ObjectUbo {
+    glm::vec4 diffuseColor{1.f};
+  };
   struct FrameInfo {
     float deltaTime{};
     GlobalUbo globalUbo{};

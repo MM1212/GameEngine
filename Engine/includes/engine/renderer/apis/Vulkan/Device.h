@@ -1,6 +1,7 @@
 #pragma once
 
 #include "defines.h"
+#include "CommandBuffer.h"
 #include <platform/Window.h>
 #include <core/Application.h>
 
@@ -51,7 +52,6 @@ namespace Engine::Renderers::Vulkan {
   };
 
   class Fence;
-
   class Device {
   public:
     Device(ApplicationInfo& appInfo, Window& window);
@@ -108,8 +108,25 @@ namespace Engine::Renderers::Vulkan {
       VkImage image,
       uint32_t width,
       uint32_t height,
-      uint32_t layerCount
+      uint32_t layerCount,
+      VkQueue queue = VK_NULL_HANDLE,
+      VkCommandPool pool = VK_NULL_HANDLE,
+      Fence* fence = nullptr
     );
+
+    SingleTimeCommandBuffer createSingleTimeCmds(
+      VkCommandPool pool,
+      VkQueue queue,
+      CommandBuffer::SubmitInfo info = {},
+      bool isPrimary = true
+    ) {
+      ASSERT(pool, "Invalid command pool");
+      ASSERT(queue, "Invalid queue");
+      return SingleTimeCommandBuffer(*this, this->graphicsCommandPool, queue, info, isPrimary);
+    }
+    SingleTimeCommandBuffer createGraphicsSingleTimeCmds(CommandBuffer::SubmitInfo info = {}) {
+      return this->createSingleTimeCmds(this->graphicsCommandPool, this->queues.graphics, info);
+    }
   private:
     void createInstance();
 #if VK_ENABLE_DEBUG_MESSENGER

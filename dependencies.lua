@@ -49,3 +49,7 @@ Vendors.ImGuizmo = MPDepTrack.new('ImGuizmo')
 
 Vendors.Engine = MPDepTrack.new('engine', '%{wks.location}/Engine')
   :addInclude("includes")
+
+Vendors.stb_image = MPDepTrack.new('stb_image')
+  :addInclude("")
+  :addLink("stb_image")

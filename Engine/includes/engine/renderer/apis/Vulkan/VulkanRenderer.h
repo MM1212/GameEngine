@@ -17,6 +17,7 @@ namespace Engine::Renderers::Vulkan::Shaders {
 }
 
 #include <core/Application.h>
+#include <engine/renderer/RendererAPI.h>
 #include <vulkan/vulkan.h>
 #include <memory>
 
@@ -41,6 +42,9 @@ namespace Engine::Renderers::Vulkan {
     bool beginFrame(FrameInfo& frameInfo) override;
     bool endFrame(FrameInfo& frameInfo) override;
     void onResize(uint32_t width, uint32_t height) override;
+
+    Ref<Engine::Texture2D> createTexture2D(const TextureSpecification& spec) override;
+    Ref<Engine::Texture2D> createTexture2D(const std::string_view& path) override;
 
     Device& getDevice() { return this->device; }
     Swapchain& getSwapchain() const { return *this->swapchain; }
@@ -86,5 +90,11 @@ namespace Engine::Renderers::Vulkan {
     uint32_t currentImageIndex = 0;
     uint32_t currentFrameIndex = 0;
     bool hasFrameStarted = false;
+
+  public:
+    static Renderer* Get() {
+      ASSERT(Engine::Renderer::GetAPI() == Engine::Renderer::API::Vulkan, "Invalid renderer API");
+      return reinterpret_cast<Renderer*>(Engine::Renderer::instance);
+    }
   };
 }

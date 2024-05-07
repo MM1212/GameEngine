@@ -16,7 +16,8 @@ workspace "GameEngine"
     "_SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING",
     "GLM_FORCE_RADIANS",
     'SPDLOG_NO_THREAD_ID',
-    "SPDLOG_COMPILED_LIB"
+    "SPDLOG_COMPILED_LIB",
+    "YAML_CPP_STATIC_DEFINE"
   }
   filter "configurations:Debug"
     defines {
@@ -39,6 +40,7 @@ group "Vendor"
   vendor "yaml-cpp"
   vendor "imgui"
   vendor "spdlog"
+  include "vendor/stb_image"
 group ""
 
 group "Core"

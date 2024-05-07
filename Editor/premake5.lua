@@ -38,7 +38,8 @@ project "Editor"
       "GLFW",
       "ImGui",
       "yaml-cpp",
-      "spdlog"
+      "spdlog",
+      "stb_image"
     }
 
 	filter "configurations:Debug"

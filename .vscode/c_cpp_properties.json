@@ -13,6 +13,7 @@
         "${workspaceFolder}/vendor/ImGuizmo",
         "${workspaceFolder}/vendor/entt/include",
         "${workspaceFolder}/vendor/yaml-cpp/include",
+        "${workspaceFolder}/vendor/stb_image/include",
         "${VULKAN_SDK}/Include"
       ],
       "defines": [
